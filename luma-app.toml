@@ -1,0 +1,37 @@
+# Playground ships as a Luma system package (packaging/rpm/luma-playground.spec),
+# like Leaf, so it stays on schema 0.1 until system apps move to 0.2.
+schema_version = "0.1"
+
+[application]
+id = "org.projectluma.Playground"
+name = "Playground"
+version = "0.1.0"
+entrypoint = "data/org.projectluma.Playground.in"
+
+[platform]
+ui_contract = "1"
+semantics_contract = "1"
+
+[responsive]
+adaptive = true
+# 390 is the phone handoff width; 1180 is where the Stage folds into a sheet.
+test_widths = [360, 390, 500, 1024, 1180, 1440]
+input_modes = ["pointer", "touch", "keyboard"]
+presentation_modes = ["windowed", "fullscreen-mobile"]
+
+# [lifecycle] is a schema 0.2 table: the 0.1 JSON Schema
+# (src/luma-platform/schemas/luma-application-v0.1.schema.json) rejects it and
+# luma lint ignores it at 0.1. Restore it with the move to 0.2:
+#   [lifecycle]
+#   # Projects are the person's documents (~/Documents/Playground Projects) and are never removed.
+#   app_data = "removable"
+#   cache = "removable"
+#   user_documents = "preserved"
+#   reset_supported = true
+#   uninstall_choices = ["keep-data", "remove-app-data"]
+
+[conformance]
+accessibility = true
+keyboard = true
+semantics = true
+reduced_motion = true

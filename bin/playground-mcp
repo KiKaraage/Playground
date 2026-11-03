@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+"""Start Playground's MCP server for one project.
+
+Agents launch this through the project's .mcp.json:
+    playground-mcp --project "~/Documents/Playground Projects/Kiln"
+
+It is ``python3 -m luma_playground.mcp``. Run from a source tree it uses the
+package next to it; installed as /usr/bin/playground-mcp (the path
+core/project.py writes into .mcp.json) it uses the one in site-packages.
+"""
+import os
+import sys
+
+source = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+if os.path.isdir(os.path.join(source, "luma_playground")):
+    sys.path.insert(0, source)
+
+from luma_playground.mcp.server import main  # noqa: E402
+
+sys.exit(main(sys.argv[1:]))

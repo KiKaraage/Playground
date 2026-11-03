@@ -1,0 +1,207 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Playground's cards: the agent's vocabulary (simulator v73 `.pgc` and friends).
+ * One shape for every card: a kind line, a title, the body, actions at the foot.
+ */
+
+.pg-card {
+  border-radius: 18px; background: @luma_float_surface;
+  box-shadow: 0 0 0 1px @luma_border, 0 1px 2px @luma_island_shadow;
+}
+.pg-card-head { padding: 12px 16px 0; min-height: 22px; }
+.pg-kind { font-size: 11.5px; font-weight: 650; color: @luma_muted; letter-spacing: 0.02em; }
+.pg-kind.needs { color: @luma_warning_ink; }
+.pg-kind.review { color: @luma_violet; }
+.pg-kind.work { color: @luma_accent_ink; }
+.pg-kind.good { color: @luma_good; }
+.pg-kind.fail { color: @luma_danger_ink; }
+.pg-card-meta { font-size: 11.5px; color: @luma_muted; letter-spacing: 0.01em; font-feature-settings: "tnum"; }
+.pg-card-title { padding: 4px 16px 0; font-size: 15.5px; font-weight: 650; letter-spacing: -0.012em; color: @luma_ink; }
+.pg-card-body { padding: 10px 16px 14px; font-size: 13.5px; color: @luma_ink_secondary; }
+.pg-card-text { font-size: 13.5px; color: @luma_ink_secondary; }
+.pg-card-foot { padding: 10px 12px 12px 16px; box-shadow: inset 0 1px 0 @luma_line; }
+.pg-card-foot.flat { box-shadow: none; padding-top: 0; }
+.pg-agreed { font-size: 12px; font-weight: 600; color: @luma_good; }
+.pg-tile {
+  min-width: 30px; min-height: 30px; border-radius: 10px; background: @luma_hover; color: @luma_ink_secondary;
+}
+.pg-tile.amber { background: alpha(@luma_warning_ink, 0.15); color: @luma_warning_ink; }
+.pg-bullet { color: @luma_muted; min-width: 10px; }
+
+/* your words, a teammate's, the agent's */
+.pg-me-bubble {
+  padding: 9px 15px 10px; border-radius: 20px 20px 6px 20px;
+  background-image: linear-gradient(to bottom, @luma_bubble_mine, @luma_bubble_mine_end);
+  color: @luma_bubble_mine_ink;
+  box-shadow: inset 0 1px 0 @luma_bubble_mine_highlight, 0 0 0 1px @luma_bubble_mine_ring, 0 1px 2px @luma_bubble_mine_shadow;
+}
+.pg-me-text { font-size: 14px; color: @luma_bubble_mine_ink; }
+.pg-me-point { padding: 1px 7px 1px 5px; border-radius: 7px; background: alpha(white, 0.18); font-size: 12px; font-weight: 600; }
+.pg-stamp { font-size: 11px; color: @luma_muted; padding: 0 6px; }
+.pg-them-bubble, .pg-say {
+  padding: 10px 15px; border-radius: 20px 20px 20px 6px;
+  background: @luma_chip; box-shadow: 0 0 0 1px @luma_chip_ring, 0 1px 2px @luma_chip_shadow;
+}
+.pg-say { margin-right: 60px; }
+.pg-say-text { font-size: 14px; color: @luma_ink; }
+.pg-say-foot {
+  margin-top: 5px; padding: 0 8px;
+  font-size: 11.5px; color: @luma_muted; letter-spacing: 0.01em;
+}
+.pg-say-holder { margin-right: 60px; }
+.pg-say-holder .pg-say { margin-right: 0; }
+/* Steps ("Ran 3 commands") line up with the agent's bubbles. */
+.pg-card-step { margin-right: 60px; }
+.pg-say-foot .pg-mark { min-width: 16px; min-height: 16px; border-radius: 5px; }
+.pg-sep { color: @luma_faint; }
+.pg-chips { margin-top: 10px; }
+button.pg-chip {
+  min-height: 32px; padding: 0 12px 0 10px; border-radius: 11px; border: none; box-shadow: none;
+  background: @luma_hover; color: @luma_ink; font-size: 12.5px; font-weight: 600;
+}
+button.pg-chip:hover { background: @luma_control_fill; }
+.pg-note { padding: 6px 12px; font-size: 12px; color: @luma_muted; }
+.pg-note image { color: @luma_muted; }
+.pg-think {
+  padding: 10px 15px; border-radius: 20px 20px 20px 6px;
+  background: @luma_chip; box-shadow: 0 0 0 1px @luma_chip_ring, 0 1px 2px @luma_chip_shadow;
+  font-size: 13.5px; color: @luma_muted;
+}
+.pg-bead { min-width: 6px; min-height: 6px; border-radius: 999px; background: @luma_muted; opacity: 0.35;
+  animation: pg-breathe 1.2s ease-in-out infinite; }
+.pg-bead.b1 { animation-delay: 150ms; }
+.pg-bead.b2 { animation-delay: 300ms; }
+@keyframes pg-breathe { 0% { opacity: 0.3; } 30% { opacity: 1; } 60% { opacity: 0.3; } 100% { opacity: 0.3; } }
+
+/* Brief and Recipe: facts as rows */
+.pg-fact-cell { padding: 9px 0; box-shadow: inset 0 -1px 0 @luma_line; }
+.pg-fact-cell.last { box-shadow: none; padding-bottom: 2px; }
+.pg-fact-key { font-size: 12.5px; color: @luma_muted; letter-spacing: 0.01em; }
+.pg-fact-value { font-size: 13.5px; color: @luma_ink; }
+.pg-recipe-row { padding: 8px 0; }
+.pg-recipe-row + .pg-recipe-row { box-shadow: inset 0 1px 0 @luma_line; }
+.pg-recipe-row .pg-tile { min-width: 32px; min-height: 32px; }
+.pg-recipe-name { font-size: 13.5px; color: @luma_ink; }
+.pg-recipe-why { font-size: 12.5px; color: @luma_muted; }
+.pg-more { margin-top: 10px; padding: 12px 14px; border-radius: 14px; background: @luma_well;
+  box-shadow: inset 0 0 0 1px @luma_well_ring; font-size: 13px; color: @luma_ink_secondary; }
+
+/* Plan */
+.pg-story-number { min-width: 22px; min-height: 22px; border-radius: 8px; background: @luma_hover;
+  font-size: 11.5px; font-weight: 700; color: @luma_ink_secondary; margin-top: 1px; }
+.pg-story-title { font-size: 13.5px; font-weight: 600; color: @luma_ink; }
+.pg-story-check { font-size: 12.5px; color: @luma_ink_secondary; }
+.pg-story-check image { color: @luma_faint; }
+.pg-estimate { margin-top: 2px; border-radius: 14px; box-shadow: 0 0 0 1px @luma_line; }
+.pg-estimate-cell { padding: 9px 12px; }
+.pg-estimate-cell + .pg-estimate-cell { box-shadow: inset 1px 0 0 @luma_line; }
+.pg-estimate-key { font-size: 11.5px; color: @luma_muted; }
+.pg-estimate-value { font-size: 13px; font-weight: 600; color: @luma_ink; }
+
+/* Step */
+.pg-fold { min-height: 48px; padding: 0 8px 0 14px; }
+.pg-ok { min-width: 20px; min-height: 20px; border-radius: 999px; background: @luma_good; color: white; }
+.pg-fold-title { font-size: 13.5px; font-weight: 550; color: @luma_ink; }
+.pg-fold-meta { font-size: 12px; color: @luma_muted; font-feature-settings: "tnum"; }
+.pg-fold-extra { padding-top: 10px; box-shadow: inset 0 1px 0 @luma_line; }
+.pg-subs { padding: 8px 16px 0; }
+.pg-sub-line { font-size: 12.5px; color: @luma_muted; min-height: 20px; }
+.pg-sub-line.done { color: @luma_ink_secondary; }
+.pg-sub-line.done image { color: @luma_good; }
+.pg-sub-line.now { color: @luma_ink; font-weight: 550; }
+.pg-sub-line.fail { color: @luma_danger_ink; }
+.pg-ring { min-width: 10px; min-height: 10px; margin: 0 2px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px @luma_faint; }
+progressbar.pg-progress { margin: 12px 16px 0; }
+progressbar.pg-progress > trough { min-height: 4px; border-radius: 2px; background: @luma_hover; }
+progressbar.pg-progress > trough > progress { min-height: 4px; border-radius: 2px; background: @luma_accent; }
+.pg-stats { padding: 10px 16px 12px; font-size: 12px; color: @luma_muted; }
+button.pg-stat-button { padding: 0; min-height: 0; background: none; border: none; box-shadow: none;
+  font-size: 12px; font-weight: 600; color: @luma_ink_secondary; }
+button.pg-stat-button:hover { color: @luma_ink; }
+.pg-files { margin: 0 16px 12px; padding: 4px; border-radius: 12px; background: @luma_well; box-shadow: inset 0 0 0 1px @luma_well_ring; }
+button.pg-file { min-height: 30px; padding: 0 8px; border-radius: 8px; background: none; border: none; box-shadow: none; color: @luma_ink_secondary; }
+button.pg-file:hover { background: @luma_hover; color: @luma_ink; }
+button.pg-file image { color: @luma_muted; }
+.pg-add { font-size: 11px; color: @luma_good; }
+.pg-del { font-size: 11px; color: @luma_danger_ink; }
+
+/* Decision */
+.pg-card-decision { box-shadow: 0 0 0 1px @luma_border, 0 1px 2px @luma_island_shadow, inset 0 0 0 1px alpha(@luma_warning_ink, 0.35); }
+.pg-card-decision.answered { box-shadow: 0 0 0 1px @luma_border, 0 1px 2px @luma_island_shadow; }
+button.pg-option {
+  padding: 11px 14px 12px 12px; border-radius: 14px; border: none;
+  background: alpha(@luma_ink, 0.03); box-shadow: inset 0 0 0 1px @luma_line; color: @luma_ink;
+}
+button.pg-option:hover { background: @luma_hover; }
+button.pg-option:checked { background: @luma_hover; box-shadow: inset 0 0 0 1.5px @luma_ink_secondary; }
+button.pg-option:focus-visible { outline: 2px solid @luma_focus_ring; outline-offset: 1px; }
+button.pg-option.picked { background: @luma_hover; box-shadow: inset 0 0 0 1.5px @luma_good; opacity: 1; }
+button.pg-option.dim { opacity: 0.45; }
+.pg-radio { min-width: 18px; min-height: 18px; margin-top: 1px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px @luma_muted; }
+button.pg-option:checked .pg-radio { box-shadow: inset 0 0 0 5.5px @luma_ink; }
+button.pg-option.picked .pg-radio { background: @luma_good; box-shadow: none; color: white; }
+.pg-option-title { font-size: 13.5px; font-weight: 600; color: @luma_ink; }
+.pg-option-text { font-size: 12.5px; color: @luma_muted; }
+.pg-default { margin: 4px 2px 0; font-size: 12px; color: @luma_muted; }
+
+/* Proof */
+.pg-proof { padding: 12px 16px 14px; }
+.pg-shot { border-radius: 22px; background: #111111; box-shadow: 0 0 0 4px #111111, 0 0 0 5px alpha(black, 0.4), 0 8px 18px -8px alpha(black, 0.5); margin: 4px; }
+.pg-shot-picture { border-radius: 18px; }
+.pg-shot-empty { color: alpha(white, 0.6); font-size: 12px; }
+.pg-play { min-width: 46px; min-height: 46px; border-radius: 999px; background: alpha(#141416, 0.62); color: white;
+  box-shadow: 0 0 0 1px alpha(white, 0.18); }
+.pg-check { padding: 7px 8px 7px 6px; border-radius: 10px; }
+button.pg-check { background: none; border: none; box-shadow: none; }
+button.pg-check:hover { background: @luma_hover; }
+.pg-check-text { font-size: 13px; color: @luma_ink; }
+.pg-see { font-size: 11.5px; color: @luma_muted; }
+button.pg-check:hover .pg-see { color: @luma_ink; }
+.pg-st { border-radius: 999px; margin-top: 1px; }
+.pg-st.pass { background: @luma_good; color: white; }
+.pg-st.fail { background: @luma_danger_ink; color: white; }
+.pg-st.wait { box-shadow: inset 0 0 0 1.5px @luma_faint; }
+.pg-by { margin: 8px 8px 0 6px; font-size: 11.5px; color: @luma_muted; }
+
+/* Heads-up */
+.pg-heads { padding: 12px 12px 12px 14px; }
+.pg-heads-title { font-size: 13px; font-weight: 600; color: @luma_ink; }
+.pg-heads-text { font-size: 13px; color: @luma_ink_secondary; }
+.pg-card-headsup.undone .pg-heads-text { color: @luma_muted; }
+.pg-card-headsup.undone .pg-tile { background: @luma_hover; color: @luma_muted; }
+
+/* Review */
+.pg-review { padding: 10px 16px 12px; font-size: 13px; color: @luma_ink_secondary; }
+.pg-review-row > image { color: @luma_muted; }
+
+/* Handoff */
+.pg-handoff { padding: 8px 16px 0; font-size: 13px; color: @luma_ink_secondary; }
+.pg-handoff > image { color: @luma_muted; }
+.pg-brief { margin: 12px 16px 0; }
+.pg-brief-label { margin: 0 0 0 2px; font-size: 12px; font-weight: 600; color: @luma_muted; }
+.pg-well-text, textview.pg-well-text > text {
+  padding: 11px 13px; border-radius: 13px; background: @luma_well; font-size: 13px; color: @luma_ink_secondary;
+}
+textview.pg-well-text { border-radius: 13px; background: @luma_well; box-shadow: inset 0 0 0 1px @luma_well_ring; }
+
+/* Cost */
+.pg-cost { padding: 11px 14px; }
+.pg-cost-title { font-size: 13px; font-weight: 600; color: @luma_ink; }
+
+/* links into the Project space (#13, a service's name) and to the web */
+.pg-card label link, .pg-say label link, .pg-them-bubble label link { color: @luma_accent_ink; }
+.pg-me-bubble label link { color: @luma_bubble_mine_ink; }
+
+/* An agent stopped, and the way on (runner failure cards: data.action / data.resolved). */
+.pg-problem {
+  padding: 12px 14px; border-radius: 16px; margin-right: 60px;
+  background: alpha(@luma_warning_ink, 0.07); box-shadow: inset 0 0 0 1px alpha(@luma_warning_ink, 0.22);
+}
+.pg-problem-glyph { color: @luma_warning_ink; margin-top: 1px; }
+.pg-problem-text { font-size: 13.5px; color: @luma_ink; }
+.pg-problem-actions { margin-left: 26px; }
+.pg-problem > label.pg-sub { margin-left: 26px; }
+.pg-problem-detail { margin-left: 26px; font-size: 12px; color: @luma_muted; }
+.pg-problem.resolved { background: none; box-shadow: inset 0 0 0 1px @luma_line; }
+.pg-problem.resolved .pg-problem-glyph { color: @luma_good; }
+.pg-problem.resolved .pg-problem-text { color: @luma_muted; }
+.pg-card-when { font-size: 12px; color: @luma_muted; font-feature-settings: "tnum"; }

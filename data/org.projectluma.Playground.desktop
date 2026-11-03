@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Playground
+GenericName=App Builder
+Comment=Make an app by describing it, then watch it come together
+Exec=org.projectluma.Playground %U
+Icon=org.projectluma.Playground
+Terminal=false
+Categories=Development;IDE;GTK;
+StartupNotify=true
+DBusActivatable=true
+Keywords=Code;Develop;Agent;AI;Ari;Claude;Codex;Project;App;Website;Build;

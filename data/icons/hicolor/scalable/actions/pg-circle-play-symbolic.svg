@@ -1,0 +1,4 @@
+<!-- Lucide geometry, ISC (lucide.dev); as Luma's Prairie theme draws it, for Playground. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <circle class="transparent-fill foreground-stroke" cx="12" cy="12" r="10"/><path class="transparent-fill foreground-stroke" d="M10 8 16 12 10 16Z"/>
+</svg>

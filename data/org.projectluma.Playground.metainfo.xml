@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<component type="desktop-application">
+  <id>org.projectluma.Playground</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <name>Playground</name>
+  <summary>Make an app by describing it, then watch it come together</summary>
+  <description>
+    <p>Playground is where you make things with an agent. Say what you want to make, answer a couple of questions, and Playground creates a real project folder, a one-page brief and a plan, then gets a first version on screen. You see and try the real thing as it is built, and every change arrives with proof that it works.</p>
+    <ul>
+      <li>Ari, Luma's own agent, or the Claude, Codex, Gemini, OpenCode and Goose programs you already use, each signed in through its own login</li>
+      <li>Goals with plain-language plans and checks, decisions only you can make, and a review before anything goes live</li>
+      <li>The live app side by side with your work in progress, on a phone, tablet or computer frame</li>
+      <li>Your own computer or your own servers, with short-lived certificates and an encrypted vault instead of passing keys around</li>
+      <li>Teammates who run the full app, see who is working where, and hand goals to each other</li>
+    </ul>
+    <p>Everything lives in a folder you own, under Documents. Playground is fully open source and works locally.</p>
+  </description>
+  <launchable type="desktop-id">org.projectluma.Playground.desktop</launchable>
+  <developer id="org.projectluma"><name>Project Luma</name></developer>
+  <url type="homepage">https://projectluma.org/apps/playground</url>
+  <content_rating type="oars-1.1"/>
+  <categories>
+    <category>Development</category>
+    <category>IDE</category>
+  </categories>
+  <releases>
+    <release version="0.1.0" date="2026-10-09"/>
+  </releases>
+</component>

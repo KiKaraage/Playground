@@ -1,0 +1,60 @@
+# Playground connections on this computer. Never secrets: API keys stay in the keyring.
+# Edit in Playground (Usage, or the agent picker).
+[[connections]]
+id = "ari"
+label = "Ari"
+kind = "ari"
+provider = "ari"
+owner = "sam"
+sharing = "team"
+where = "this-computer"
+spend_cap = "$10 a month"
+endpoint = "luma-credits"
+created = "2026-10-09T00:17:59-05:00"
+
+[[connections]]
+id = "claude"
+label = "Claude"
+kind = "personal-plan"
+provider = "claude"
+owner = "sam"
+sharing = "just-me"
+where = "this-computer"
+work_on_team_tasks = true
+team_task_cap = 30
+created = "2026-10-09T00:17:59-05:00"
+plan = "Max plan"
+
+[[connections]]
+id = "codex"
+label = "Codex"
+kind = "personal-plan"
+provider = "codex"
+owner = "sam"
+sharing = "just-me"
+where = "this-computer"
+created = "2026-10-09T00:17:59-05:00"
+plan = "Plus plan"
+
+[[connections]]
+id = "qwen"
+label = "Qwen 27B"
+kind = "local"
+provider = "ollama"
+owner = "sam"
+sharing = "team"
+where = "this-computer"
+model = "qwen3:27b"
+endpoint = "ollama"
+created = "2026-10-09T00:17:59-05:00"
+
+[[connections]]
+id = "team-key"
+label = "Team key"
+kind = "team-key"
+provider = "claude"
+owner = "sam"
+sharing = "team"
+where = "this-computer"
+spend_cap = "$25 a month"
+created = "2026-10-09T00:17:59-05:00"

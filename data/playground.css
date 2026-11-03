@@ -1,0 +1,400 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Playground: the window, the rail, the conversation, the composer and the Stage (simulator v73).
+ * Colours are LumaUI tokens (@luma_*), so light and dark both follow the desktop. The only
+ * literal colours are identity hues for marks, and the hardware of the device frames.
+ */
+
+/* Colours are the kit's tokens, named directly in every rule. (A sheet that defines its own
+ * colour names clashes with an earlier copy of itself loaded before the kit's tokens exist,
+ * and the earlier, unresolved name wins in dark.) Shorthand used in comments: card = float
+ * surface, ring = border, hair = line, ink 2/3/4 = ink secondary / muted / faint. */
+
+window.pg-window { font-family: "Figtree", "Inter", sans-serif; }
+
+/* ── Title row: the project (its book), who's here, Places, Usage ───────────── */
+.pg-title-divider { min-width: 1px; min-height: 18px; background: @luma_line; margin: 0 6px 0 4px; }
+button.pg-project-button {
+  min-height: 32px; padding: 0 10px 0 6px; border-radius: 10px; background: none; box-shadow: none;
+  border: none; color: @luma_ink;
+}
+button.pg-project-button:hover { background: @luma_hover; }
+button.pg-project-button:focus-visible { outline: 2px solid @luma_focus_ring; outline-offset: -2px; }
+.pg-project-name { font-weight: 650; font-size: 13.5px; }
+.pg-project-book { font-weight: 500; font-size: 12.5px; color: @luma_muted; }
+.pg-project-book-icon { color: @luma_muted; }
+
+button.pg-tb {
+  min-height: 32px; padding: 0 11px 0 9px; border-radius: 10px; background: none; border: none; box-shadow: none;
+  font-size: 12.5px; font-weight: 550; color: @luma_ink_secondary;
+}
+button.pg-tb:hover, button.pg-tb:checked { background: @luma_hover; color: @luma_ink; }
+button.pg-tb:focus-visible { outline: 2px solid @luma_focus_ring; outline-offset: -2px; }
+.pg-compact button.pg-tb { padding: 0 9px; }
+.pg-faces > * + * { margin-left: -6px; }
+.pg-mini { min-width: 26px; color: @luma_ink_secondary; }
+
+/* ── Marks ───────────────────────────────────────────────────────────────── */
+.pg-mark {
+  border-radius: 30%; color: white;
+  box-shadow: inset 0 1px 0 alpha(white, 0.28), 0 1px 2px alpha(black, 0.25);
+}
+.pg-mark.picture { background: none; box-shadow: 0 1px 2px alpha(black, 0.22); }
+.pg-mark-letter { color: white; }
+.pg-project-mark { border-radius: 30%; }
+.pg-hue-0   { background-image: linear-gradient(160deg, #d97474, #9a3838); }
+.pg-hue-30  { background-image: linear-gradient(160deg, #d98a5c, #a44b25); }
+.pg-hue-60  { background-image: linear-gradient(160deg, #d7a24f, #9a6a1c); }
+.pg-hue-90  { background-image: linear-gradient(160deg, #a9b85a, #66762a); }
+.pg-hue-120 { background-image: linear-gradient(160deg, #6fbf7a, #2f7d45); }
+.pg-hue-150 { background-image: linear-gradient(160deg, #4fbf98, #1d7d5c); }
+.pg-hue-180 { background-image: linear-gradient(160deg, #4fb7c0, #1c7680); }
+.pg-hue-210 { background-image: linear-gradient(160deg, #5aa6d9, #23679c); }
+.pg-hue-240 { background-image: linear-gradient(160deg, #6f8de0, #3550a8); }
+.pg-hue-270 { background-image: linear-gradient(160deg, #9c7ce0, #5e3ea8); }
+.pg-hue-300 { background-image: linear-gradient(160deg, #c672cf, #8a3594); }
+.pg-hue-330 { background-image: linear-gradient(160deg, #d9709f, #9c3462); }
+.pg-mark.pg-ari:not(.picture) { background-image: linear-gradient(150deg, #b56cf0, #e0609f); }
+
+.pg-presence { min-width: 7px; min-height: 7px; border-radius: 999px; margin: 0 -1px -1px 0; box-shadow: 0 0 0 2px @luma_window; }
+.pg-presence.here { background: @luma_good; }
+.pg-presence.away { background: @luma_faint; }
+
+/* ── state glyphs, dots, pills ───────────────────────────────────────────── */
+.pg-glyph { color: @luma_muted; }
+.pg-glyph.needs { color: @luma_warning_ink; }
+.pg-glyph.work, .pg-spin { color: @luma_accent_ink; }
+.pg-glyph.review { color: @luma_violet; }
+.pg-glyph.live { color: @luma_good; }
+.pg-glyph.paused { color: @luma_muted; }
+.pg-dot { min-width: 6px; min-height: 6px; border-radius: 999px; background: @luma_good; }
+.pg-dot.stage { background: @luma_accent; }
+.pg-dot.warn { background: @luma_warning_ink; }
+.pg-dot.bad { background: @luma_danger_ink; }
+.pg-pill { min-height: 22px; padding: 0 9px; border-radius: 8px; font-size: 11.5px; font-weight: 650; }
+.pg-pill.needs { color: @luma_warning_ink; background: alpha(@luma_warning_ink, 0.15); }
+.pg-pill.work { color: @luma_accent_ink; background: alpha(@luma_accent, 0.13); }
+.pg-pill.review { color: @luma_violet; background: alpha(@luma_violet, 0.14); }
+.pg-pill.live { color: @luma_good; background: alpha(@luma_good, 0.13); }
+.pg-pill.paused, .pg-pill.draft { color: @luma_muted; background: @luma_hover; }
+.pg-tag { min-height: 20px; padding: 0 7px; border-radius: 6px; font-size: 11px; font-weight: 650; color: @luma_ink_secondary; background: @luma_control_fill; }
+.pg-meter { color: @luma_ink_secondary; }
+.pg-meter.warn { color: @luma_warning_ink; }
+
+/* ── buttons (v73 .bt, .ib) ──────────────────────────────────────────────── */
+button.pg-bt {
+  min-height: 34px; padding: 0 14px 0 12px; border-radius: 11px; border: none; box-shadow: none;
+  font-size: 13px; font-weight: 600; color: @luma_ink; background: none;
+}
+button.pg-bt.fill { background: @luma_control_fill; }
+button.pg-bt.fill:hover { background: @luma_control_fill_hover; }
+button.pg-bt.plain:hover, button.pg-bt.quiet:hover { background: @luma_hover; }
+button.pg-bt.quiet { color: @luma_ink_secondary; }
+button.pg-bt.key {
+  background-image: linear-gradient(to bottom, @luma_key, @luma_key_end); color: @luma_key_ink;
+  box-shadow: inset 0 1px 0 @luma_key_highlight, 0 0 0 1px @luma_key_ring, 0 1px 2px @luma_key_shadow;
+}
+button.pg-bt.key:hover { filter: brightness(1.08); }
+button.pg-bt.key:disabled { opacity: 0.38; filter: saturate(0); }
+button.pg-bt:disabled { opacity: 0.45; }
+button.pg-bt.sm { min-height: 30px; border-radius: 10px; padding: 0 11px; font-size: 12.5px; }
+button.pg-bt:focus-visible, button.pg-ib:focus-visible { outline: 2px solid @luma_focus_ring; outline-offset: 1px; }
+button.pg-ib {
+  min-width: 32px; min-height: 32px; padding: 0; border-radius: 9px; border: none; box-shadow: none; background: none;
+  color: @luma_muted;
+}
+button.pg-ib:hover { background: @luma_hover; color: @luma_ink; }
+
+/* ── the rail ────────────────────────────────────────────────────────────── */
+.pg-rail { padding-bottom: 10px; }
+.pg-rail row.lumaui-row.pg-project-row { min-height: 44px; border-radius: 12px; padding-top: 6px; padding-bottom: 6px; }
+.pg-rail row.pg-project-row label.lumaui-row-title { font-size: 13.5px; font-weight: 650; }
+.pg-rail row.pg-project-row label.lumaui-row-subtitle { font-size: 11.5px; color: @luma_muted; }
+.pg-rail row.pg-project-row.current:hover { background: none; }
+.pg-rail row.pg-goal-row { min-height: 46px; border-radius: 12px; margin-top: 1px; }
+.pg-rail list.luma-navigation-list > row.pg-goal-row:selected { background: @luma_control_fill; box-shadow: none; }
+.pg-rail row.pg-goal-row label.lumaui-row-title { font-size: 13px; font-weight: 550; color: @luma_frame_ink_secondary; }
+.pg-rail row.pg-goal-row:selected label.lumaui-row-title { font-weight: 600; color: @luma_frame_ink; }
+.pg-rail row.pg-goal-row label.lumaui-row-subtitle { font-size: 11.5px; letter-spacing: 0.01em; }
+.pg-rail row.pg-goal-row.state-needs label.lumaui-row-subtitle { color: @luma_warning_ink; }
+.pg-rail row.pg-goal-row.state-work label.lumaui-row-subtitle { color: @luma_accent_ink; }
+.pg-rail row.pg-goal-row.state-review label.lumaui-row-subtitle { color: @luma_violet; }
+.pg-rail row.pg-goal-row.state-live label.lumaui-row-subtitle { color: @luma_good; }
+.pg-rail row.pg-chat-row { min-height: 40px; }
+.pg-rail row.pg-add-row { min-height: 36px; }
+.pg-rail row.pg-add-row label.lumaui-row-title { color: @luma_muted; font-weight: 500; font-size: 13px; }
+.pg-rail row.pg-add-row:hover label.lumaui-row-title { color: @luma_ink; }
+.pg-rail row.pg-add-row image { color: @luma_muted; }
+.pg-rail .lumaui-row-lead { min-width: 18px; }
+.pg-rail row.pg-project-row .lumaui-row-lead { min-width: 30px; }
+button.pg-row-more { min-width: 28px; min-height: 28px; border-radius: 9px; }
+.pg-rail-foot { padding: 8px 0 0; margin-top: 6px; box-shadow: inset 0 1px 0 @luma_line; }
+button.pg-rail-foot-row {
+  min-height: 44px; padding: 0 12px; border-radius: 14px; background: none; border: none; box-shadow: none;
+  font-size: 15px; font-weight: 500; color: @luma_ink;
+}
+button.pg-rail-foot-row:hover { background: @luma_hover; }
+button.pg-rail-foot-row image { color: @luma_muted; }
+
+/* ── the islands ─────────────────────────────────────────────────────────── */
+.pg-body { }
+.pg-split { }
+.pg-stage-island { background: @luma_window; margin-left: 8px; }
+.pg-stage-island.floating {
+  margin: 0 8px 8px 0;
+  box-shadow: 0 18px 40px -12px alpha(black, 0.4), 0 0 0 1px @luma_line;
+}
+.pg-phone .pg-stage-island { margin: 0; border-radius: 0; }
+
+/* ── the conversation ────────────────────────────────────────────────────── */
+.pg-thread { margin: 24px 32px 0; }
+.pg-phone .pg-thread { margin: 70px 16px 0; }
+.pg-thread-head { padding: 4px 0 10px; }
+.pg-thread-title { font-size: 24px; font-weight: 700; letter-spacing: -0.024em; }
+.pg-thread-meta { font-size: 12.5px; color: @luma_muted; }
+.pg-bead-sep { min-width: 3px; min-height: 3px; border-radius: 999px; background: @luma_faint; }
+.pg-day { margin: 6px 0 -2px; font-size: 11.5px; font-weight: 600; color: @luma_muted; letter-spacing: 0.02em; }
+.pg-thread-hint { margin-top: 28px; }
+.pg-thread-hint-title { font-size: 15px; font-weight: 600; color: @luma_ink_secondary; }
+.pg-sub { font-size: 12px; color: @luma_muted; letter-spacing: 0.01em; }
+.pg-strong { font-weight: 600; color: @luma_ink_secondary; }
+.pg-mono { font-family: "IBM Plex Mono", "Adwaita Mono", "Noto Sans Mono", "DejaVu Sans Mono", "Source Code Pro", "Menlo", monospace; font-size: 11.5px; }
+
+/* the welcome */
+.pg-welcome { margin: 80px 32px 140px; }
+.pg-phone .pg-welcome { margin: 84px 18px 120px; }
+.pg-welcome-mark { min-width: 60px; min-height: 60px; margin-bottom: 18px; }
+.pg-welcome-title { font-size: 30px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 6px; }
+.pg-welcome-text { font-size: 14px; color: @luma_muted; margin-bottom: 22px; }
+.pg-big { padding: 8px; border-radius: 22px; background: @luma_well; box-shadow: inset 0 0 0 1px @luma_well_ring; }
+textview.pg-big-text, textview.pg-big-text > text { background: none; color: @luma_ink; font-size: 18px; font-weight: 500; }
+.pg-big-placeholder { font-size: 18px; font-weight: 500; color: @luma_faint; }
+.pg-big .pg-sub { margin-left: 8px; }
+.pg-examples { margin-top: 20px; }
+.pg-examples-title { margin: 0 4px 2px; font-size: 12px; font-weight: 600; color: @luma_muted; }
+button.pg-example {
+  padding: 11px 14px; border-radius: 14px; background: none; border: none; box-shadow: inset 0 0 0 1px @luma_line;
+  font-size: 14px; font-weight: 400; color: @luma_ink_secondary;
+}
+button.pg-example:hover { background: @luma_hover; color: @luma_ink; }
+button.pg-example image { color: @luma_muted; }
+.pg-example-arrow { opacity: 0; }
+button.pg-example:hover .pg-example-arrow, button.pg-example:focus-visible .pg-example-arrow { opacity: 1; }
+
+/* the not-connected note under your words */
+.pg-offline { margin-top: 2px; }
+
+/* ── the composer (v73 .fbar.pgcomp) ─────────────────────────────────────── */
+.pg-composer {
+  padding: 6px; border-radius: 18px;
+  background: @luma_bar_surface;
+  box-shadow: inset 0 1px 0 @luma_bar_highlight, 0 0 0 1px @luma_bar_ring, 0 8px 24px -6px @luma_bar_shadow,
+              0 1px 3px @luma_bar_shadow_near;
+}
+.pg-composer.phone { margin-bottom: 22px; border-radius: 24px; }
+.pg-composer-chips { padding: 2px 2px 6px 2px; }
+button.pg-agent-chip {
+  min-height: 40px; padding: 0 9px 0 8px; border-radius: 13px; border: none; box-shadow: none;
+  background: @luma_hover; color: @luma_ink;
+}
+button.pg-agent-chip:hover { background: @luma_control_fill; }
+.pg-composer.phone button.pg-agent-chip { padding: 0 8px; min-width: 40px; }
+.pg-agent-name { font-size: 13px; font-weight: 600; }
+.pg-agent-sub { font-size: 10.5px; font-weight: 500; color: @luma_muted; }
+.pg-agent-chevron { color: @luma_muted; }
+.pg-composer-field { min-height: 40px; }
+.pg-composer-field scrolledwindow, .pg-composer-field viewport { background: none; }
+textview.pg-composer-text, textview.pg-composer-text > text { background: none; color: @luma_ink; font-size: 14.5px; }
+.pg-composer-placeholder { font-size: 14.5px; color: @luma_muted; }
+button.pg-composer-attach { min-width: 40px; min-height: 40px; border-radius: 13px; }
+button.pg-send {
+  min-width: 40px; min-height: 40px; padding: 0; border-radius: 13px; border: none; box-shadow: none;
+  background: @luma_hover; color: @luma_muted;
+}
+button.pg-send.on {
+  background-image: linear-gradient(to bottom, @luma_key, @luma_key_end); color: @luma_key_ink;
+  box-shadow: inset 0 1px 0 @luma_key_highlight, 0 0 0 1px @luma_key_ring, 0 1px 2px @luma_key_shadow;
+}
+button.pg-send:disabled { opacity: 1; }
+.pg-ptchip { min-height: 26px; padding: 0 4px 0 8px; border-radius: 8px; font-size: 12px; font-weight: 600; color: @luma_ink_secondary; background: @luma_hover; }
+button.pg-ptchip-x { min-width: 20px; min-height: 20px; padding: 0; border-radius: 6px; background: none; border: none; color: @luma_muted; }
+button.pg-ptchip-x:hover { background: @luma_control_fill; color: @luma_ink; }
+
+/* ── the Stage ───────────────────────────────────────────────────────────── */
+.pg-stage-head { padding: 10px 10px 0; }
+.pg-stage .lumaui-modes.pg-devices button.lumaui-mode { padding: 0 8px; }
+.pg-stage.in-sheet .pg-stage-head { padding: 26px 16px 0; }
+.pg-canvas {
+  background-image: radial-gradient(circle, @luma_creative_canvas_dot 1px, transparent 1.3px);
+  background-size: 18px 18px;
+}
+.pg-stage-caption { padding: 4px 16px 14px; font-size: 12px; color: @luma_muted; }
+.pg-stage.in-sheet .pg-stage-caption { padding-bottom: 12px; }
+.pg-stage-bar {
+  margin-bottom: 12px; padding: 4px; border-radius: 16px;
+  background: @luma_bar_surface;
+  box-shadow: inset 0 1px 0 @luma_bar_highlight, 0 0 0 1px @luma_bar_ring, 0 8px 24px -6px @luma_bar_shadow,
+              0 1px 3px @luma_bar_shadow_near;
+}
+.pg-stage.in-sheet .pg-stage-bar { margin: 0 16px 34px; padding: 6px; border-radius: 26px; }
+button.pg-bar-button {
+  min-height: 36px; padding: 0 12px 0 10px; border-radius: 12px; border: none; box-shadow: none; background: none;
+  font-size: 13px; font-weight: 500; color: @luma_ink;
+}
+.pg-stage.in-sheet button.pg-bar-button { min-height: 48px; border-radius: 20px; font-size: 14px; }
+button.pg-bar-button:hover { background: @luma_hover; }
+button.pg-bar-button:checked { background: @luma_chip; box-shadow: 0 0 0 1px @luma_chip_ring, 0 1px 2px @luma_chip_shadow; }
+button.pg-bar-button.rec { color: @luma_record; }
+button.pg-bar-button:disabled { opacity: 0.45; }
+.pg-point-tip {
+  margin-top: 10px; min-height: 30px; padding: 0 12px; border-radius: 10px;
+  background: #e8a92e; color: #241a05; font-size: 12px; font-weight: 600;
+  box-shadow: 0 6px 16px -6px alpha(black, 0.5);
+}
+.pg-empty { color: @luma_muted; }
+.pg-empty-tile {
+  min-width: 64px; min-height: 64px; border-radius: 20px; background: @luma_hover; box-shadow: inset 0 0 0 1px @luma_line;
+  color: @luma_muted;
+}
+.pg-empty-title { font-size: 14px; font-weight: 600; color: @luma_ink_secondary; margin-top: 4px; }
+.pg-empty-text { font-size: 13px; color: @luma_muted; }
+.pg-building { color: @luma_muted; font-size: 13px; }
+.pg-screen { background: white; }
+.pg-device.phone .pg-screen { border-radius: 0 0 48px 48px; }
+.pg-device.phone.edge .pg-screen { border-radius: 48px; background: #0d0d0e; }
+.pg-device.tablet .pg-screen { border-radius: 30px; }
+.pg-noweb { color: #3b342d; }
+
+/* the phone's Stage button, top right, the same glass as the title island */
+button.pg-phone-stage {
+  margin: 52px 12px 0 0; min-height: 44px; padding: 0 14px; border-radius: 16px; border: none;
+  background: @luma_bar_surface; color: @luma_ink; font-size: 14px; font-weight: 600;
+  box-shadow: inset 0 1px 0 @luma_bar_highlight, 0 0 0 1px @luma_bar_ring, 0 6px 18px -6px @luma_bar_shadow;
+}
+
+/* QR */
+.pg-qr-code { border-radius: 14px; }
+.pg-lightbox { border-radius: 24px; }
+
+/* the rail's quiet line: what needs a look (Project space) */
+row.pg-attention-row { padding: 0 0 6px 46px; min-height: 0; background: none; }
+row.pg-attention-row:hover { background: none; }
+button.pg-attention-link {
+  min-height: 22px; padding: 0 4px; border-radius: 6px; border: none; box-shadow: none; background: none;
+  font-size: 11.5px; font-weight: 550; color: @luma_ink_secondary;
+}
+button.pg-attention-link:hover { background: @luma_hover; }
+.pg-attention-sep { font-size: 11.5px; color: @luma_faint; margin: 0 1px; }
+.pg-stage .lumaui-modes.icons-only .lumaui-mode-label { margin: 0; padding: 0; }
+
+/* the composer when there's nothing to type: someone else's goal, a paused one (v73 .pgban) */
+.pg-banner { padding: 2px 2px 2px 6px; min-height: 40px; }
+.pg-banner-text { font-size: 13px; color: @luma_ink_secondary; }
+
+/* Beside the agent chip while Ari runs on a ChatGPT plan: OpenAI's usage page. */
+.pg-plan-link { padding: 4px 8px; min-height: 0; border-radius: 8px; background: none; box-shadow: none;
+  font-size: 12px; color: @luma_accent_ink; }
+.pg-plan-link:hover { background: @luma_hover; }
+
+/* The welcome's quiet way in for someone who was invited. */
+button.pg-join-link { margin-top: 18px; padding: 6px 10px; min-height: 0; background: none; box-shadow: none;
+  border-radius: 10px; font-size: 13px; color: @luma_muted; }
+button.pg-join-link:hover { background: @luma_hover; color: @luma_ink; }
+button.pg-join-link:focus-visible { outline: 2px solid @luma_focus_ring; outline-offset: 1px; }
+
+/* ── 13 Oct: the sidebar's project picker, the area island, the conversation beside it ── */
+button.pg-project-picker {
+  margin: 4px 0 12px; padding: 8px 10px 8px 8px; min-height: 52px; border-radius: 14px;
+  background: alpha(@luma_frame_ink, 0.05); border: none; box-shadow: inset 0 0 0 1px alpha(@luma_frame_ink, 0.06);
+  color: @luma_frame_ink;
+}
+button.pg-project-picker:hover { background: alpha(@luma_frame_ink, 0.08); }
+button.pg-project-picker:focus-visible { outline: 2px solid @luma_focus_ring; outline-offset: -2px; }
+.pg-picker-name { font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
+.pg-picker-status { font-size: 11.5px; color: @luma_muted; }
+.pg-picker-chevrons { color: @luma_muted; }
+popover.pg-picker-popover > contents { padding: 6px; border-radius: 16px; min-width: 280px; }
+.pg-picker-heading { font-size: 11.5px; font-weight: 650; color: @luma_muted; margin: 6px 10px 4px; }
+button.pg-picker-row, button.pg-picker-action {
+  min-height: 44px; padding: 4px 10px; border-radius: 10px; background: none; border: none; box-shadow: none;
+}
+button.pg-picker-row.child { padding-left: 34px; min-height: 36px; }
+button.pg-picker-row:hover, button.pg-picker-action:hover { background: @luma_hover; }
+button.pg-picker-row.current { background: @luma_control_fill; }
+button.pg-picker-action { min-height: 36px; font-weight: 550; }
+.pg-picker-row-name { font-size: 13.5px; font-weight: 600; }
+.pg-picker-row-sub { font-size: 11.5px; color: @luma_muted; }
+.pg-picker-check { color: @luma_accent; }
+popover.pg-picker-popover separator { margin: 6px 4px; }
+
+.pg-sidebar row.pg-area-row { min-height: 38px; border-radius: 10px; }
+.pg-sidebar row.pg-area-row label.lumaui-row-title { font-size: 13.5px; font-weight: 550; color: @luma_frame_ink_secondary; }
+.pg-sidebar row.pg-area-row:selected label.lumaui-row-title { font-weight: 650; color: @luma_frame_ink; }
+.pg-sidebar row.pg-area-row image { color: @luma_frame_ink_secondary; }
+.pg-sidebar row.pg-area-row:selected image { color: @luma_frame_ink; }
+.pg-sidebar row.pg-area-row.attention .lumaui-count-badge { background: @luma_accent; color: white; }
+.pg-sidebar row.pg-conversation-row { min-height: 44px; border-radius: 12px; margin-top: 1px; }
+.pg-sidebar row.pg-conversation-row label.lumaui-row-title { font-size: 13px; font-weight: 550; color: @luma_frame_ink_secondary; }
+.pg-sidebar row.pg-conversation-row label.lumaui-row-subtitle { font-size: 11.5px; }
+.pg-sidebar row.pg-conversation-row.current { background: alpha(@luma_frame_ink, 0.07); }
+.pg-sidebar row.pg-conversation-row.current label.lumaui-row-title { color: @luma_frame_ink; font-weight: 650; }
+.pg-sidebar row.pg-conversation-row.state-needs label.lumaui-row-subtitle { color: @luma_warning_ink; }
+.pg-sidebar row.pg-conversation-row.state-work label.lumaui-row-subtitle { color: @luma_accent_ink; }
+
+.pg-area-island { background: @luma_window; }
+.pg-area-island .pgs-doc { padding: 34px 40px 132px 40px; }
+.pg-phone .pg-area-island .pgs-doc { padding: 70px 16px 120px 16px; }
+.pg-area-island .pgs-doc-title { font-size: 30px; font-weight: 750; letter-spacing: -0.03em; }
+.pg-conversation-island { margin-left: 8px; }
+.pg-conversation-island.floating {
+  margin: 0 8px 8px 0;
+  box-shadow: 0 18px 40px -12px alpha(black, 0.4), 0 0 0 1px @luma_line;
+}
+.pg-phone .pg-conversation-island { margin: 0; border-radius: 0; }
+/* The composer in the conversation column: words first, then who's working · attach · send. */
+.pg-composer-row { padding: 2px 4px 0 6px; }
+.pg-composer-tools { padding: 0 0 0 0; }
+.pg-composer-tools button.pg-agent-chip { min-height: 34px; padding: 0 8px 0 6px; border-radius: 11px; }
+.pg-composer-tools button.pg-composer-attach, .pg-composer-tools button.pg-send { min-width: 36px; min-height: 36px; border-radius: 12px; }
+.pg-sidebar row.pg-area-row { min-height: 34px; padding-top: 0; padding-bottom: 0; }
+/* The picker stands on the same inset as the rows under it; the Stage lines up with the other areas. */
+button.pg-project-picker { margin: 4px 10px 12px 10px; }
+.pg-stage-island { margin-left: 0; }
+.pg-stage-island.floating { margin: 0; box-shadow: none; }
+/* The conversation column's pinned heading. */
+.pg-chat-pinned { padding: 16px 20px 10px 22px; border-bottom: 1px solid alpha(@luma_line, 0.6); }
+.pg-chat-pinned .pg-thread-head { padding: 0; }
+.pg-chat-pinned .pg-thread-title { font-size: 17px; font-weight: 700; letter-spacing: -0.012em; }
+.pg-phone .pg-chat-pinned { padding-top: 64px; }
+.pg-conversation-island .pg-thread { margin: 14px 20px 0; }
+.pg-chat-pinned .pg-thread-title { color: @luma_ink; }
+window.pg-phone .pg-area-island .pgs-doc { padding: 118px 16px 120px 16px; }
+button.pg-project-picker { min-height: 0; padding: 6px 10px 6px 7px; }
+.pg-composer-tools button.pg-options-chip {
+  min-height: 34px; padding: 0 9px; border-radius: 11px; border: none; box-shadow: none; background: none;
+  color: @luma_ink_secondary; font-size: 12.5px; font-weight: 550;
+}
+.pg-composer-tools button.pg-options-chip:hover { background: @luma_hover; color: @luma_ink; }
+
+/* Search everywhere, at the foot of the sidebar: a quiet field-like button. */
+button.pg-sidebar-search { margin: 0; padding: 0 12px; min-height: 36px; border-radius: 10px;
+  background: alpha(@luma_frame_ink, 0.06); color: @luma_frame_ink_secondary; font-size: 13px; font-weight: 500; }
+button.pg-sidebar-search:hover { background: alpha(@luma_frame_ink, 0.10); color: @luma_frame_ink; }
+.pg-sidebar-search-keys { font-size: 11px; font-weight: 600; opacity: 0.7; }
+
+/* What the preview printed: over the device, in place. */
+.pg-log-panel { background: @luma_surface; border-radius: 14px; box-shadow: 0 1px 3px alpha(black, 0.12); }
+.pg-log-head { padding: 10px 10px 6px 16px; }
+.pg-log-title { font-size: 13px; font-weight: 650; }
+.pg-log-text, .pg-log-text text { background: transparent; font-family: monospace; font-size: 12px; color: @luma_ink_secondary; }
+/* A desktop app's windows sit on the Preview itself: no white page behind them. */
+.pg-device.desktop-app .pg-screen { background: transparent; }
+.pg-sidebar-foot { margin: 0 0 12px; }
+button.pg-sidebar-usage { min-width: 36px; min-height: 36px; padding: 0; border-radius: 10px;
+  background: alpha(@luma_frame_ink, 0.06); color: @luma_frame_ink_secondary; }
+button.pg-sidebar-usage:hover { background: alpha(@luma_frame_ink, 0.10); color: @luma_frame_ink; }
+.pg-meta-state { font-weight: 650; }
+.pg-meta-state.work { color: @luma_accent_ink; }
+.pg-meta-state.needs { color: #c27a00; }
+.pg-meta-state.review { color: #8a63c9; }
+.pg-meta-state.live { color: #2e9e57; }
+button.pg-meta-state-button { padding: 0 4px; margin: 0 -4px; min-height: 0; border-radius: 6px; }

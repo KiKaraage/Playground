@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.projectluma.Playground
+Exec=@bindir@/org.projectluma.Playground --gapplication-service
