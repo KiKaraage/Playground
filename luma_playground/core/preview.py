@@ -73,7 +73,9 @@ _SENSITIVE_ENV = re.compile(r"(API_?KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|
 _KEEP_ENV = {"PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "LC_CTYPE", "TERM", "SHELL", "TMPDIR",
              "XDG_RUNTIME_DIR", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "DISPLAY",
              "WAYLAND_DISPLAY", "DBUS_SESSION_BUS_ADDRESS", "NVM_DIR", "NODE_OPTIONS", "VIRTUAL_ENV",
-             "PYTHONPATH", "JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT", "GOPATH", "CARGO_HOME", "RUSTUP_HOME"}
+             "PYTHONPATH", "JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT", "GOPATH", "CARGO_HOME", "RUSTUP_HOME",
+             # Playground's own copy of LumaUI on systems without Luma (packaging/linux): previewed Luma apps use it.
+             "LD_LIBRARY_PATH", "GI_TYPELIB_PATH"}
 
 
 # ───────────────────────────── detection ─────────────────────────────

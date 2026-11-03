@@ -115,17 +115,17 @@ class SshWorld(SyncWorld):
     def join(self, name: str, member_id: str, role: str, as_who: str | None = None) -> Path:
         """``as_who``: whose computer (data folder) joins; the same member from another computer if it differs."""
         as_who = as_who or member_id
-        with self.member("nick"):
-            invite = sync.create_invite(self.nick_dir, role=role, member_id=member_id, name=name)
+        with self.member("noor"):
+            invite = sync.create_invite(self.noor_dir, role=role, member_id=member_id, name=name)
         self.assertNotIn("PRIVATE", invite.file_text)
         with self.member(as_who):
             seen = sync.read_invite(invite.code)
             self.assertEqual(seen.project_name, "Kiln")
             self.assertEqual(seen.safety, self.safety)          # both screens show the same safety code
             request = sync.request_to_join(seen, name)
-        with self.member("nick"):
-            checked = sync.read_join_request(self.nick_dir, request.code)
-            welcome = sync.approve_join(self.nick_dir, checked)
+        with self.member("noor"):
+            checked = sync.read_join_request(self.noor_dir, request.code)
+            welcome = sync.approve_join(self.noor_dir, checked)
         self.assertTrue(welcome.extra["pushed"], welcome.extra)
         with self.member(as_who):
             return sync.accept_approval(welcome.code, self.roots[as_who])
@@ -155,22 +155,22 @@ class ServerHomeTests(SshWorld):
 
     def setUp(self) -> None:
         super().setUp()
-        self.nick_dir = self.make_project()
-        store = ProjectStore(self.nick_dir)
+        self.noor_dir = self.make_project()
+        store = ProjectStore(self.noor_dir)
         project = store.read_project()
         self.project_id = project.id
         project.places.append(Place(id="dev-box", name="the dev box", role="development", kind="ssh",
                                     host="127.0.0.1", user=self.user, port=self.port))
         store.write_project(project)
         self.server_home = self.tmp / "server-home" / "kiln"
-        with self.member("nick"):
-            setup = sync.home_setup_instructions(self.nick_dir, mode="server", place_id="dev-box",
+        with self.member("noor"):
+            setup = sync.home_setup_instructions(self.noor_dir, mode="server", place_id="dev-box",
                                                  trust_dir=str(self.srv), trust=self.trust, home=str(self.server_home))
         self.assertEqual(setup["trust"], self.trust)
         self.setup_script = setup["script"]
         self.prepare_server(setup)
-        with self.member("nick"):
-            info = sync.share_project(self.nick_dir, mode="server", place_id="dev-box", home=str(self.server_home),
+        with self.member("noor"):
+            info = sync.share_project(self.noor_dir, mode="server", place_id="dev-box", home=str(self.server_home),
                                       trust_dir=str(self.srv), trust=self.trust)
         self.assertEqual(info["home"], "the dev box")
         self.assertEqual(info["trust"], self.trust)
@@ -198,16 +198,16 @@ class ServerHomeTests(SshWorld):
         self.assertEqual(members["priya"].role, "builder")
         self.assertIn("devices", members["priya"].extra)
 
-        nick = self.engine(self.nick_dir, "nick")
+        noor = self.engine(self.noor_dir, "noor")
         priya = self.engine(priya_dir, "priya")
-        goal = ProjectStore(self.nick_dir).create_goal("Add a waitlist")
-        self.settle(nick, priya)
+        goal = ProjectStore(self.noor_dir).create_goal("Add a waitlist")
+        self.settle(noor, priya)
         ProjectStore(priya_dir).append_thread(goal.id, ThreadEntry(role="person", kind="message", text="from priya"))
-        ProjectStore(self.nick_dir).append_thread(goal.id, ThreadEntry(role="person", kind="message", text="from nick"))
-        self.settle(priya, nick)
-        for project_dir in (self.nick_dir, priya_dir):
+        ProjectStore(self.noor_dir).append_thread(goal.id, ThreadEntry(role="person", kind="message", text="from noor"))
+        self.settle(priya, noor)
+        for project_dir in (self.noor_dir, priya_dir):
             self.assertIn("from priya", self.thread_texts(project_dir, goal.id))
-            self.assertIn("from nick", self.thread_texts(project_dir, goal.id))
+            self.assertIn("from noor", self.thread_texts(project_dir, goal.id))
 
         # Code: Priya's goal branch reaches the server; a release updates the server's checkout.
         priya.begin_goal(goal.id)
@@ -226,29 +226,29 @@ class ServerHomeTests(SshWorld):
         self.assertNotIn("let-me-in", shell.stdout)
         self.assertIn("only for syncing", shell.stderr)
         # And no one can write someone else's presence.
-        fake = subprocess.run(["git", "hash-object", "-w", "--stdin"], cwd=priya_dir, input='{"member":"nick"}',
+        fake = subprocess.run(["git", "hash-object", "-w", "--stdin"], cwd=priya_dir, input='{"member":"noor"}',
                               capture_output=True, text=True, check=True).stdout.strip()
-        pushed = git(priya_dir, "push", url, f"+{fake}:refs/playground/presence/nick", env=env, check=False)
+        pushed = git(priya_dir, "push", url, f"+{fake}:refs/playground/presence/noor", env=env, check=False)
         self.assertNotEqual(pushed.returncode, 0)
         self.assertIn("not where others are", pushed.stderr)
 
-        # Previews: Nick's development pass gives a shell and a checkout of his branch on the server.
-        with self.member("nick"):
-            nick.begin_goal(goal.id, switch=True)
-            place = nick.stage_place()
-        self.assertTrue(place["path"].endswith("/stage/nick"))
+        # Previews: Noor's development pass gives a shell and a checkout of his branch on the server.
+        with self.member("noor"):
+            noor.begin_goal(goal.id, switch=True)
+            place = noor.stage_place()
+        self.assertTrue(place["path"].endswith("/stage/noor"))
         self.assertTrue((Path(place["path"]) / "waitlist.html").exists())
 
         # Revocation: the very next sync is refused, with words, and nothing needs running on the server.
-        with self.member("nick"):
-            removed = sync.remove_member_access(self.nick_dir, "priya")
+        with self.member("noor"):
+            removed = sync.remove_member_access(self.noor_dir, "priya")
         self.assertTrue(removed["pushed"], removed)
         ProjectStore(priya_dir).append_thread(goal.id, ThreadEntry(role="person", kind="message", text="after"))
         status = priya.sync_now()
         self.assertEqual(status["state"], "removed", status)
         self.assertIn("took this computer off", status["detail"])
-        nick.sync_now()
-        self.assertNotIn("after", self.thread_texts(self.nick_dir, goal.id))
+        noor.sync_now()
+        self.assertNotIn("after", self.thread_texts(self.noor_dir, goal.id))
         # The same pass, by hand: still in date, but the gate (root's, in a real setup) refuses it, saying why.
         again = git(priya_dir, "ls-remote", url, env=env, check=False)
         self.assertNotEqual(again.returncode, 0)
@@ -268,32 +268,32 @@ class ServerHomeTests(SshWorld):
         # Her pass itself is still in date: only the access list changes.
         cert = security.read_certificate(self.device("priya").certificate_path(self.project_id))
         self.assertGreater(sync._valid_to_epoch(cert), time.time() + 3600)
-        with self.member("nick"):
-            self.assertTrue(sync.remove_member_access(self.nick_dir, "priya")["pushed"])
+        with self.member("noor"):
+            self.assertTrue(sync.remove_member_access(self.noor_dir, "priya")["pushed"])
         refused = self.shell("priya")
         self.assertNotEqual(refused.returncode, 0)
         self.assertNotIn("let-me-in", refused.stdout)
         self.assertIn("Permission denied", refused.stderr)
-        # Nick, still on the list, gets in as before.
-        self.assertIn("let-me-in", self.shell("nick").stdout)
+        # Noor, still on the list, gets in as before.
+        self.assertIn("let-me-in", self.shell("noor").stdout)
 
     def test_an_access_list_whose_time_is_up_is_refused_until_an_owner_renews_it(self):
         try:
             priya_dir = self.join("Priya", "priya", "builder")
         except sync.SyncError:
             self.fail("joining failed; sshd says:\n" + self.sshd_log())
-        nick = self.engine(self.nick_dir, "nick")
+        noor = self.engine(self.noor_dir, "noor")
         priya = self.engine(priya_dir, "priya")
-        self.settle(nick, priya)
+        self.settle(noor, priya)
         # Someone with a shell puts an old list back: properly signed, but its time is up.
-        with self.member("nick"):
-            desk = sync.OwnerDesk(self.nick_dir, self.data["nick"], now=time.time() - sync.ACCESS_VALID_S - 600)
+        with self.member("noor"):
+            desk = sync.OwnerDesk(self.noor_dir, self.data["noor"], now=time.time() - sync.ACCESS_VALID_S - 600)
             self.assertTrue(desk.publish_access(force=True))
-        stale = git(self.nick_dir, "rev-parse", sync.ACCESS_REF).stdout.strip()
-        git(self.nick_dir, "update-ref", "refs/playground/stale-test", stale)
+        stale = git(self.noor_dir, "rev-parse", sync.ACCESS_REF).stdout.strip()
+        git(self.noor_dir, "update-ref", "refs/playground/stale-test", stale)
         repo = self.server_home / "repo.git"
-        git(repo, "fetch", "-q", str(self.nick_dir), "+refs/playground/stale-test:refs/playground/access")
-        ca = sync.Pin.load(self.data["nick"], self.project_id).ca
+        git(repo, "fetch", "-q", str(self.noor_dir), "+refs/playground/stale-test:refs/playground/access")
+        ca = sync.Pin.load(self.data["noor"], self.project_id).ca
         state, _parsed = sync.verify_access(ca, self.project_id,
                                             sync._access_files(sync._Repo(repo), "refs/playground/access"))
         self.assertEqual(state, "expired")
@@ -302,10 +302,10 @@ class ServerHomeTests(SshWorld):
         self.assertEqual(status["state"], "access", status)
         self.assertIn("run out", status["detail"])
         self.assertNotIn("let-me-in", self.shell("priya").stdout)
-        # Nick's Playground comes back: it may only send a fresh list, and does, first thing.
-        status = nick.sync_now()
+        # Noor's Playground comes back: it may only send a fresh list, and does, first thing.
+        status = noor.sync_now()
         self.assertEqual(status["state"], "up-to-date", status)
-        self.assertEqual(sync.verify_access(nick.pin().ca, self.project_id,
+        self.assertEqual(sync.verify_access(noor.pin().ca, self.project_id,
                                             sync._access_files(sync._Repo(repo), "refs/playground/access"))[0], "ok")
         self.assertEqual(priya.sync_now()["state"], "up-to-date")
         self.assertIn("let-me-in", self.shell("priya").stdout)
@@ -316,13 +316,13 @@ class ServerHomeTests(SshWorld):
             priya_dir = self.join("Priya", "priya", "builder")
         except sync.SyncError:
             self.fail("joining failed; sshd says:\n" + self.sshd_log())
-        nick = self.engine(self.nick_dir, "nick")
+        noor = self.engine(self.noor_dir, "noor")
         rae = self.engine(rae_dir, "rae")
         priya = self.engine(priya_dir, "priya")
-        self.settle(nick, rae, priya)
+        self.settle(noor, rae, priya)
         self.assertIn(self.device("rae").fingerprint, rae.pin().issuers)
         self.assertTrue(sync.sharing_info(rae_dir, self.data["rae"])["issues_passes"])
-        # Nick's computer is away from now on. Rae's Playground renews Priya's passes with Rae's own key.
+        # Noor's computer is away from now on. Rae's Playground renews Priya's passes with Rae's own key.
         with self.member("rae"):
             desk = sync.OwnerDesk(rae_dir, self.data["rae"])
             self.assertFalse(desk.is_root)
@@ -350,7 +350,7 @@ class ServerHomeTests(SshWorld):
             answer = sync.answer_renewal(rae_dir, checked)
         self.assertTrue(answer.code.startswith("PGP1-"))
         forged = json.loads(answer.file_text)
-        forged["body"]["member"] = "nick"
+        forged["body"]["member"] = "noor"
         with self.member("priya"):
             with self.assertRaises(sync.InviteError):
                 sync.accept_renewal(priya_dir, json.dumps(forged))
@@ -369,50 +369,50 @@ class ServerHomeTests(SshWorld):
         members = ProjectStore(laptop_dir).read_project().members
         self.assertEqual([m.id for m in members].count("priya"), 1)       # still one person
         self.assertEqual(len(next(m for m in members if m.id == "priya").extra["devices"]), 2)
-        nick = self.engine(self.nick_dir, "nick")
+        noor = self.engine(self.noor_dir, "noor")
         one = self.engine(priya_dir, "priya")
         two = self.engine(laptop_dir, "priya2")
-        goal = ProjectStore(self.nick_dir).create_goal("Gift cards")
-        self.settle(nick, one, two)
+        goal = ProjectStore(self.noor_dir).create_goal("Gift cards")
+        self.settle(noor, one, two)
         ProjectStore(laptop_dir).append_thread(goal.id, ThreadEntry(role="person", kind="message", text="laptop"))
-        self.settle(two, one, nick)
+        self.settle(two, one, noor)
         self.assertIn("laptop", self.thread_texts(priya_dir, goal.id))
-        self.assertEqual(sync.member_devices(self.nick_dir, self.data["nick"])["priya"].__len__(), 2)
+        self.assertEqual(sync.member_devices(self.noor_dir, self.data["noor"])["priya"].__len__(), 2)
         for who, key in (("priya", desk_top), ("priya2", laptop)):
             cert = security.read_certificate(sync.sync_cert_path(key, self.project_id))
             self.assertEqual(cert.public_key_fingerprint, key.fingerprint)
             self.assertIn("let-me-in", self.shell(who).stdout)
         # The laptop is lost: take that computer off; the other one keeps working.
-        with self.member("nick"):
-            sync.remove_device(self.nick_dir, "priya", laptop.fingerprint)
+        with self.member("noor"):
+            sync.remove_device(self.noor_dir, "priya", laptop.fingerprint)
         self.assertEqual(two.sync_now()["state"], "removed")
         self.assertNotIn("let-me-in", self.shell("priya2").stdout)
         self.assertEqual(one.sync_now()["state"], "up-to-date")
         self.assertIn("let-me-in", self.shell("priya").stdout)
-        self.assertIn("priya", {m.id for m in ProjectStore(self.nick_dir).read_project().members})
+        self.assertIn("priya", {m.id for m in ProjectStore(self.noor_dir).read_project().members})
 
     def test_restore_points_from_two_teammates_never_clash(self):
         try:
             priya_dir = self.join("Priya", "priya", "builder")
         except sync.SyncError:
             self.fail("joining failed; sshd says:\n" + self.sshd_log())
-        nick = self.engine(self.nick_dir, "nick")
+        noor = self.engine(self.noor_dir, "noor")
         priya = self.engine(priya_dir, "priya")
-        self.settle(nick, priya)
+        self.settle(noor, priya)
         # Both release at the same moment, before either has heard of the other's: same number, two points.
-        (self.nick_dir / "nick.txt").write_text("nick\n")
+        (self.noor_dir / "noor.txt").write_text("noor\n")
         (priya_dir / "priya.txt").write_text("priya\n")
-        with self.member("nick"):
-            ours = places.release(self.nick_dir, places.THIS_COMPUTER, None, None, title="Nick's change")
+        with self.member("noor"):
+            ours = places.release(self.noor_dir, places.THIS_COMPUTER, None, None, title="Noor's change")
         with self.member("priya"):
             theirs = places.release(priya_dir, places.THIS_COMPUTER, None, None, title="Priya's change")
         self.assertEqual(ours["restore_point"], theirs["restore_point"])
         self.assertNotEqual(ours["restore_id"], theirs["restore_id"])
-        self.assertTrue(ours["restore_id"].startswith("nick/"))
+        self.assertTrue(ours["restore_id"].startswith("noor/"))
         self.assertTrue(theirs["restore_id"].startswith("priya/"))
-        self.settle(nick, priya, nick)
+        self.settle(noor, priya, noor)
         # Everyone's history shows both, and each computer has the code for both (tags travel with sync).
-        for project_dir in (self.nick_dir, priya_dir):
+        for project_dir in (self.noor_dir, priya_dir):
             points = {p["id"]: p for p in places.restore_points(project_dir)}
             self.assertIn(ours["restore_id"], points)
             self.assertIn(theirs["restore_id"], points)
@@ -426,22 +426,22 @@ class ServerHomeTests(SshWorld):
                     check=False)
         self.assertNotEqual(moved.returncode, 0)
         # The next number goes past both.
-        self.assertEqual(places.next_restore_number(self.nick_dir), ours["restore_point"] + 1)
+        self.assertEqual(places.next_restore_number(self.noor_dir), ours["restore_point"] + 1)
 
     def test_viewers_read_but_cannot_change(self):
         try:
             rae_dir = self.join("Rae", "rae", "viewer")
         except sync.SyncError:
             self.fail("joining failed; sshd says:\n" + self.sshd_log())
-        nick = self.engine(self.nick_dir, "nick")
+        noor = self.engine(self.noor_dir, "noor")
         rae = self.engine(rae_dir, "rae")
-        goal = ProjectStore(self.nick_dir).create_goal("Gift cards")
-        self.settle(nick, rae)
+        goal = ProjectStore(self.noor_dir).create_goal("Gift cards")
+        self.settle(noor, rae)
         self.assertEqual(ProjectStore(rae_dir).read_goal(goal.id).title, "Gift cards")
         ProjectStore(rae_dir).append_thread(goal.id, ThreadEntry(role="person", kind="message", text="viewer says"))
-        self.settle(rae, nick)                              # rae doesn't even try; status stays up to date
-        self.assertNotIn("viewer says", self.thread_texts(self.nick_dir, goal.id))
-        self.assertIn("rae", {p["member"] for p in sync.read_presence(self.nick_dir)})
+        self.settle(rae, noor)                              # rae doesn't even try; status stays up to date
+        self.assertNotIn("viewer says", self.thread_texts(self.noor_dir, goal.id))
+        self.assertIn("rae", {p["member"] for p in sync.read_presence(self.noor_dir)})
         # Forcing it by hand: the home refuses.
         with self.member("rae"):
             url, env = rae._remote(rae.pin())
@@ -452,9 +452,9 @@ class ServerHomeTests(SshWorld):
 
     @unittest.skipUnless(security.crypto_available()[0], "python3-cryptography isn't installed here (the VM has it)")
     def test_the_vault_opens_for_the_new_member_and_closes_after(self):
-        with self.member("nick"):
-            vault = security.Vault(self.nick_dir, self.project_id)
-            vault.create("nick", "Nick")
+        with self.member("noor"):
+            vault = security.Vault(self.noor_dir, self.project_id)
+            vault.create("noor", "Noor")
             vault.set("DATABASE_URL", "postgres://kiln:s3cret-value@db/kiln")
         try:
             priya_dir = self.join("Priya", "priya", "builder")
@@ -465,16 +465,16 @@ class ServerHomeTests(SshWorld):
                              "postgres://kiln:s3cret-value@db/kiln")
         for path in self.all_files(priya_dir / ".playground", self.server_home):
             self.assertNotIn(b"s3cret-value", path.read_bytes(), path)
-        with self.member("nick"):
-            removed = sync.remove_member_access(self.nick_dir, "priya")
+        with self.member("noor"):
+            removed = sync.remove_member_access(self.noor_dir, "priya")
         self.assertEqual(removed["to_change"], ["DATABASE_URL"])
 
     def all_files(self, *roots: Path) -> list[Path]:
         return [Path(d) / f for root in roots for d, _dirs, files in os.walk(root) for f in files]
 
     def test_tampered_invites_and_requests_are_refused(self):
-        with self.member("nick"):
-            invite = sync.create_invite(self.nick_dir, role="builder", name="Sam")
+        with self.member("noor"):
+            invite = sync.create_invite(self.noor_dir, role="builder", name="Sam")
         envelope = json.loads(invite.file_text)
         envelope["body"]["home"]["hosts"] = ["203.0.113.66"]          # point it somewhere else
         with self.member("priya"):
@@ -483,12 +483,12 @@ class ServerHomeTests(SshWorld):
             request = sync.request_to_join(sync.read_invite(invite.code), "Sam")
         forged = json.loads(request.file_text)
         forged["body"]["name"] = "Someone else"
-        with self.member("nick"):
+        with self.member("noor"):
             with self.assertRaises(sync.InviteError):
-                sync.read_join_request(self.nick_dir, json.dumps(forged))
-            welcome = sync.approve_join(self.nick_dir, sync.read_join_request(self.nick_dir, request.code))
+                sync.read_join_request(self.noor_dir, json.dumps(forged))
+            welcome = sync.approve_join(self.noor_dir, sync.read_join_request(self.noor_dir, request.code))
             with self.assertRaises(sync.InviteError):          # an invite works once
-                sync.read_join_request(self.nick_dir, request.code)
+                sync.read_join_request(self.noor_dir, request.code)
         forged_welcome = json.loads(welcome.file_text)
         forged_welcome["body"]["member"]["role"] = "owner"
         with self.member("priya"):
@@ -522,8 +522,8 @@ class AccountHomeTests(ServerHomeTests):
         priya = self.engine(priya_dir, "priya")
         priya.sync_now()
         self.assertIn("let-me-in", self.shell("priya").stdout)
-        with self.member("nick"):
-            sync.remove_member_access(self.nick_dir, "priya")
+        with self.member("noor"):
+            sync.remove_member_access(self.noor_dir, "priya")
         self.assertEqual(priya.sync_now()["state"], "removed")                 # syncing stops at once
         self.assertIn("let-me-in", self.shell("priya").stdout)                 # the shell, honestly, doesn't
 
@@ -536,8 +536,8 @@ class AccountHomeTests(ServerHomeTests):
             rae_dir = self.join("Rae", "rae", "owner")
         except sync.SyncError:
             self.fail("joining failed; sshd says:\n" + self.sshd_log())
-        nick, rae = self.engine(self.nick_dir, "nick"), self.engine(rae_dir, "rae")
-        self.settle(nick, rae)
+        noor, rae = self.engine(self.noor_dir, "noor"), self.engine(rae_dir, "rae")
+        self.settle(noor, rae)
         with self.member("rae"):
             desk = sync.OwnerDesk(rae_dir, self.data["rae"])
             self.assertFalse(desk.can_issue_passes())
@@ -558,10 +558,10 @@ class ThisComputerHomeTests(ServerHomeTests):
 
     def setUp(self) -> None:
         SshWorld.setUp(self)
-        self.nick_dir = self.make_project()
-        self.project_id = ProjectStore(self.nick_dir).read_project().id
-        with self.member("nick"):
-            setup = sync.home_setup_instructions(self.nick_dir, mode="this-computer", user=self.user,
+        self.noor_dir = self.make_project()
+        self.project_id = ProjectStore(self.noor_dir).read_project().id
+        with self.member("noor"):
+            setup = sync.home_setup_instructions(self.noor_dir, mode="this-computer", user=self.user,
                                                  trust_dir=str(self.srv))
         self.assertNotIn(security.principal_for(self.project_id, "development"), setup["script"])
         self.run_setup(setup["script"])
@@ -569,8 +569,8 @@ class ThisComputerHomeTests(ServerHomeTests):
                          f"TrustedUserCAKeys {self.srv}/trusted_user_ca_keys", f"RevokedKeys {self.srv}/revoked.krl",
                          f"AuthorizedPrincipalsFile {self.srv}/principals/%u"])
         hostkey = (self.tmp / "hostkey.pub").read_text()
-        with self.member("nick"):
-            info = sync.share_project(self.nick_dir, mode="this-computer", port=self.port, addresses=["127.0.0.1"],
+        with self.member("noor"):
+            info = sync.share_project(self.noor_dir, mode="this-computer", port=self.port, addresses=["127.0.0.1"],
                                       host_key=hostkey, trust_dir=str(self.srv), user=self.user)
         self.assertEqual(info["warning"], sync.THIS_COMPUTER_WARNING)
         self.safety = info["safety"]
@@ -580,19 +580,19 @@ class ThisComputerHomeTests(ServerHomeTests):
             priya_dir = self.join("Priya", "priya", "builder")
         except sync.SyncError:
             self.fail("joining failed; sshd says:\n" + self.sshd_log())
-        nick = self.engine(self.nick_dir, "nick")
+        noor = self.engine(self.noor_dir, "noor")
         priya = self.engine(priya_dir, "priya")
-        self.assertEqual(nick.sync_now()["warning"], sync.THIS_COMPUTER_WARNING)   # the host is told
+        self.assertEqual(noor.sync_now()["warning"], sync.THIS_COMPUTER_WARNING)   # the host is told
         self.assertNotIn("warning", priya.sync_now())
         goal = ProjectStore(priya_dir).create_goal("Gift cards")
-        self.settle(priya, nick)
-        self.assertEqual(ProjectStore(self.nick_dir).read_goal(goal.id).title, "Gift cards")
+        self.settle(priya, noor)
+        self.assertEqual(ProjectStore(self.noor_dir).read_goal(goal.id).title, "Gift cards")
         # Teammates never get a shell on the owner's computer: no development principal is trusted here.
         self.assertTrue(self.device("priya").certificate_path(self.project_id).exists())
         self.assertNotIn("let-me-in", self.shell("priya").stdout)
         # Removing her works at once: the gate checks the list on every sync.
-        with self.member("nick"):
-            sync.remove_member_access(self.nick_dir, "priya")
+        with self.member("noor"):
+            sync.remove_member_access(self.noor_dir, "priya")
         self.assertEqual(priya.sync_now()["state"], "removed")
 
     def test_offline_says_whose_computer(self):
@@ -609,7 +609,7 @@ class ThisComputerHomeTests(ServerHomeTests):
             self.sshd.wait(timeout=10)
         status = priya.sync_now()
         self.assertEqual(status["state"], "offline")
-        self.assertIn("Nick’s computer", status["detail"])
+        self.assertIn("Noor’s computer", status["detail"])
 
     def test_shell_access_ends_the_moment_a_builder_is_removed(self):
         self.skipTest("teammates never get a shell on the owner's computer")

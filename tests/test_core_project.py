@@ -14,7 +14,7 @@ from luma_playground.core.model import Brief, Member, Recipe, RecipePart
 from luma_playground.core.paths import ProjectPaths
 from luma_playground.core.store import ProjectStore
 
-NICK = Member(id="nick", name="Nick", role="owner")
+NOOR = Member(id="noor", name="Noor", role="owner")
 
 
 class CreateProjectTests(unittest.TestCase):
@@ -29,7 +29,7 @@ class CreateProjectTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def make(self, name="Kiln", **kwargs):
-        kwargs.setdefault("owner", NICK)
+        kwargs.setdefault("owner", NOOR)
         kwargs.setdefault("bus", events.EventBus())
         return project.create_project(name, **kwargs)
 
@@ -74,7 +74,7 @@ class CreateProjectTests(unittest.TestCase):
         store = ProjectStore(folder)
         read = store.read_project()
         self.assertEqual((read.name, read.home, read.summary), ("Kiln", "this-computer", "Class sign-ups for a pottery studio"))
-        self.assertEqual(read.owner.id, "nick")
+        self.assertEqual(read.owner.id, "noor")
         self.assertEqual(read.places[0].id, "this-computer")
         self.assertEqual(store.read_brief().summary, "Class sign-ups for a pottery studio")
         self.assertEqual(store.read_activity()[0].kind, "created")
@@ -126,7 +126,7 @@ class LifecycleTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def make(self, name):
-        return project.create_project(name, root=self.root, owner=NICK, git=False, bus=events.EventBus())
+        return project.create_project(name, root=self.root, owner=NOOR, git=False, bus=events.EventBus())
 
     def test_open_and_list_by_activity(self):
         older = self.make("Older")

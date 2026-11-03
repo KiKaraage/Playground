@@ -14,7 +14,8 @@ ASK = ("gdbus introspect --session --dest org.project_luma.ShellState1 --object-
        "color-scheme")
 
 
-@unittest.skipUnless(shutil.which("dbus-run-session") and shutil.which("gdbus"), "needs a session bus to start")
+@unittest.skipUnless(sys.platform.startswith("linux") and shutil.which("dbus-run-session") and shutil.which("gdbus"),
+                     "needs a Linux session bus to start")
 class PreviewShellTests(unittest.TestCase):
     def ask(self, device: str, appearance: str) -> str:
         done = subprocess.run(["dbus-run-session", "--", sys.executable, str(SHELL), "--device", device,
@@ -32,7 +33,6 @@ class PreviewShellTests(unittest.TestCase):
         said = self.ask("app", "light")
         self.assertIn("Presentation = 'desktop'", said)
         self.assertIn("(<uint32 2>,)", said)
-
 
     def test_the_shell_lives_as_long_as_the_app_and_ends_with_its_code(self):
         import time

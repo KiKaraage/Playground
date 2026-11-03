@@ -409,7 +409,7 @@ class RefreshTests(ServicesTestCase):
         from luma_playground.core import security
         project_id = self.store().read_project().id
         vault = security.Vault(self.project_dir, project_id)
-        vault.create("nick", "Nick")
+        vault.create("noor", "Noor")
         for name in ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"):
             vault.set(name, SECRETS[name])
         fake = self.provider({"/graphql": CloudflareTests.graphql_reply.__get__(self)})
@@ -455,7 +455,7 @@ class MoneyTests(ServicesTestCase):
         self.snap("aws", "2026-10-05T00:00:00", 12.0)
         project_id = self.store().read_project().id
         usage.record_run("team-key", runs_on="the team key", cost=3.25, tokens_in=40_000, project_id=project_id, when=NOW)
-        usage.record_run("nick-claude", runs_on="Nick's Claude", tokens_in=90_000, project_id=project_id, when=NOW)
+        usage.record_run("noor-claude", runs_on="Noor's Claude", tokens_in=90_000, project_id=project_id, when=NOW)
         usage.record_run("other", cost=99, project_id="another-project", when=NOW)
         usage.record_run("team-key", cost=1.0, project_id=project_id, when=datetime(2026, 9, 30, tzinfo=timezone.utc))
         picture = usage.monthly_money(self.project_dir, project_id=project_id, now=NOW)
@@ -466,7 +466,7 @@ class MoneyTests(ServicesTestCase):
         self.assertEqual(picture["summary"],
                          "October so far: $35.25 · models $3.25, services $32.00 · services budget $50.00")
         lines = [m["summary"] for m in picture["models"]]
-        self.assertEqual(lines, ["the team key: $3.25 · 40k tokens", "Nick's Claude: 90k tokens, on a plan"])
+        self.assertEqual(lines, ["the team key: $3.25 · 40k tokens", "Noor's Claude: 90k tokens, on a plan"])
 
     def test_models_only_without_a_project(self):
         usage.record_run("team-key", cost=2.0, when=NOW)

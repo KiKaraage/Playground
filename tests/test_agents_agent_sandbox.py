@@ -120,7 +120,7 @@ class PolicyTests(unittest.TestCase):
         self.assertFalse(sandbox.agent_sandbox_wanted("off", shared_project=True))
 
     def test_connection_setting(self):
-        conn = Connection(id="codex", label="Codex", kind="personal-plan", provider="codex", owner="nick")
+        conn = Connection(id="codex", label="Codex", kind="personal-plan", provider="codex", owner="noor")
         self.assertTrue(conn.sandbox_recommended)
         self.assertTrue(conn.sandbox_for(shared_project=True))
         conn.sandbox = "on"
@@ -129,14 +129,14 @@ class PolicyTests(unittest.TestCase):
         conn.sandbox = "sometimes"
         with self.assertRaises(ConnectionRuleError):
             conn.validate()
-        ari = Connection(id="ari", label="Ari", kind="ari", provider="ari", endpoint="ollama", owner="nick")
+        ari = Connection(id="ari", label="Ari", kind="ari", provider="ari", endpoint="ollama", owner="noor")
         self.assertFalse(ari.sandbox_for(shared_project=True))   # Ari's commands are fenced in already
 
     def test_project_is_shared_reads_members(self):
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, ".playground").mkdir()
             toml = Path(tmp, ".playground", "project.toml")
-            toml.write_text('[project]\nname = "x"\n\n[[members]]\nid = "nick"\nname = "Nick"\nrole = "owner"\n')
+            toml.write_text('[project]\nname = "x"\n\n[[members]]\nid = "noor"\nname = "Noor"\nrole = "owner"\n')
             self.assertFalse(sandbox.project_is_shared(tmp))
             toml.write_text(toml.read_text() + '\n[[members]]\nid = "priya"\nname = "Priya"\nrole = "builder"\n')
             self.assertTrue(sandbox.project_is_shared(tmp))
@@ -177,7 +177,7 @@ class RunnerFenceTests(RunnerBase):
         self.addCleanup(os.environ.pop, "FAKE_ACP_STATE", None)
 
     def connection(self, setting: str) -> Connection:
-        return Connection(id="fake", label="Fake", kind="local", provider="fake", owner="nick",
+        return Connection(id="fake", label="Fake", kind="local", provider="fake", owner="noor",
                           command=[sys.executable, FAKE], sandbox=setting)
 
     def factory(self, connection, root, handlers, **kw):

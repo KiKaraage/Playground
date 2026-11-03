@@ -27,7 +27,7 @@ from luma_playground.core.samples import create_sample_kiln  # noqa: E402
 from luma_playground.core.store import ProjectStore  # noqa: E402
 from luma_playground.mcp import server as mcp  # noqa: E402
 
-NICK = Member(id="nick", name="Nick", role="owner")
+NOOR = Member(id="noor", name="Noor", role="owner")
 
 
 class BudgetTests(unittest.TestCase):
@@ -46,10 +46,10 @@ class BudgetTests(unittest.TestCase):
 
     def test_indexes_grow_by_a_line_an_item(self):
         with tempfile.TemporaryDirectory() as tmp:
-            made = project.create_project("Big", root=tmp, owner=NICK, git=False, bus=events.EventBus())
+            made = project.create_project("Big", root=tmp, owner=NOOR, git=False, bus=events.EventBus())
             store = ProjectStore(made.path)
             for n in range(120):
-                store.create_task(f"Task number {n} with a reasonably long title", by="person:nick")
+                store.create_task(f"Task number {n} with a reasonably long title", by="person:noor")
             store.refresh_areas()
             index = (Path(made.path) / ".playground" / "tasks" / "index.md").read_text()
             self.assertLess(budget.tokens(index) / 120, 30, "each task costs one short line in the index")
@@ -89,14 +89,14 @@ class ColdStartTests(unittest.TestCase):
     def test_a_decision_on_a_card_becomes_knowledge(self):
         from luma_playground.core.model import Option, PendingDecision
         with tempfile.TemporaryDirectory() as tmp:
-            made = project.create_project("Notes", root=tmp, owner=NICK, git=False, bus=events.EventBus())
+            made = project.create_project("Notes", root=tmp, owner=NOOR, git=False, bus=events.EventBus())
             store = ProjectStore(made.path)
             store.write_pending(PendingDecision(
                 id="python-or-rust", question="Keep the app in Python, or move it to Rust?",
                 context="Rust starts in 40 ms instead of 300 ms but needs a build step.",
                 options=[Option(id="python", label="Stay in Python", consequence="No build step"),
                          Option(id="rust", label="Move to Rust", consequence="Faster start, a build step")]))
-            store.answer_decision("python-or-rust", "rust", by="nick")
+            store.answer_decision("python-or-rust", "rust", by="noor")
             note = next(n for n in store.list_knowledge() if n.extra.get("decision") == "python-or-rust")
             self.assertEqual(note.extra["kind"], "decision")
             for words in ("## Context", "40 ms", "## Decision", "Move to Rust", "## Alternatives", "Stay in Python"):
@@ -109,7 +109,7 @@ class SessionTests(unittest.TestCase):
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        made = project.create_project("Kiln", root=self.tmp.name, owner=NICK, git=False, bus=events.EventBus())
+        made = project.create_project("Kiln", root=self.tmp.name, owner=NOOR, git=False, bus=events.EventBus())
         self.root = made.path
         self.store = ProjectStore(self.root)
         self.server = mcp.PlaygroundServer(self.root, stdin=io.BytesIO(), stdout=io.BytesIO(),

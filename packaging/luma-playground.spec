@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 Name:           luma-playground
-%global tag 0.1.0-alpha.1
+%global tag 0.1.0-alpha.2
 Version:        0.1.0
-Release:        0.1.alpha1%{?dist}
+Release:        0.2.alpha2%{?dist}
 Summary:        Make an app by describing it, with agents you choose
 License:        Apache-2.0 AND ISC
 URL:            https://github.com/SimplyLuma/Playground
@@ -121,5 +121,8 @@ appstream-util validate-relax --nonet data/org.projectluma.Playground.metainfo.x
 %{_datadir}/playground/
 
 %changelog
+* Tue Nov 03 2026 Project Luma <maintainers@projectluma.org> - 0.1.0-0.2.alpha2
+- Builds for Fedora, Debian and Ubuntu with their own LumaUI; previewed apps keep its library paths
+
 * Tue Nov 03 2026 Project Luma <maintainers@projectluma.org> - 0.1.0-0.1.alpha1
 - First alpha

@@ -151,7 +151,7 @@ class PlatformTestCase(unittest.TestCase):
         store = ProjectStore(root, bus=self.bus)
         store.ensure_layout()
         store.write_project(Project(name=name, id=f"{name.lower()}-0123456789abcdef", created="2026-10-09T00:00:00Z",
-                                    members=members or [Member(id="nick", name="Nick", role="owner"),
+                                    members=members or [Member(id="noor", name="Noor", role="owner"),
                                                         Member(id="priya", name="Priya", role="builder"),
                                                         Member(id="rae", name="Rae", role="reviewer")]))
         return root

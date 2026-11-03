@@ -154,10 +154,10 @@ class ProductionGuardTests(PlatformTestCase):
 
     def test_release_only_through_an_approved_review(self):
         with self.assertRaisesRegex(ProductionProtected, "isn't ready"):
-            places.authorize_release(self.project_dir, {**self.review, "ready": False}, self.prod["id"], "nick")
+            places.authorize_release(self.project_dir, {**self.review, "ready": False}, self.prod["id"], "noor")
         with self.assertRaisesRegex(ProductionProtected, "different place"):
             places.authorize_release(self.project_dir, {**self.review, "destination": self.dev["id"]},
-                                     self.prod["id"], "nick")
+                                     self.prod["id"], "noor")
         with self.assertRaisesRegex(ProductionProtected, "owner or a reviewer"):
             places.authorize_release(self.project_dir, self.review, self.prod["id"], "priya")
         with self.assertRaises(ProductionProtected):
@@ -170,7 +170,7 @@ class ProductionGuardTests(PlatformTestCase):
         self.assertTrue(any(e.kind == "release" for e in activity))
 
     def test_forged_misdirected_and_expired_tickets_fail(self):
-        ticket = places.authorize_release(self.project_dir, self.review, self.prod["id"], "nick")
+        ticket = places.authorize_release(self.project_dir, self.review, self.prod["id"], "noor")
         forged = dataclasses.replace(ticket, approved_by="priya")
         with self.assertRaisesRegex(ProductionProtected, "isn't genuine"):
             places.guard_write(self.prod, ticket=forged)

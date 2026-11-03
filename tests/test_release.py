@@ -77,7 +77,7 @@ class ReleaseTestCase(PlatformTestCase):
     def deploy(self, body: str) -> None:
         self.write(".playground/run.toml", "[app]\ncommand = \"true\"\n\n[deploy]\n" + textwrap.dedent(body))
 
-    def ticket(self, who: str = "nick", place: str = "production", review: str = "photos"):
+    def ticket(self, who: str = "noor", place: str = "production", review: str = "photos"):
         return places.authorize_release(self.project_dir, {"id": review, "ready": True, "destination": place},
                                         place, who)
 
@@ -224,7 +224,7 @@ class AuthorizationTests(ReleaseTestCase):
             self.ticket(who="priya")                            # a builder
         with self.assertRaises(ProductionProtected):
             places.authorize_release(self.project_dir, {"id": "x", "ready": False, "destination": "production"},
-                                     "production", "nick")
+                                     "production", "noor")
         self.release(ticket=self.ticket(who="rae"))             # a reviewer may
         self.assertEqual(self.history()[-1].actor, "rae")
 
@@ -473,7 +473,7 @@ class LocalReleaseTests(ReleaseTestCase):
         with self.assertRaises(ProductionProtected):
             places.rollback(self.project_dir, 1, None)
         # Code only.
-        ticket = places.authorize_rollback(self.project_dir, 1, "nick")
+        ticket = places.authorize_rollback(self.project_dir, 1, "noor")
         result = places.rollback(self.project_dir, 1, ticket, bus=self.bus)
         self.assertTrue(result["ok"])
         self.assertIn("version 1", (self.server / "app" / "index.html").read_text())
@@ -486,7 +486,7 @@ class LocalReleaseTests(ReleaseTestCase):
         # People keep booking under version 1; then forward to 2 again, with 2's data.
         db.write_text("rows: 4\n")
         steps: list[str] = []
-        places.rollback(self.project_dir, 2, places.authorize_rollback(self.project_dir, 2, "nick"),
+        places.rollback(self.project_dir, 2, places.authorize_rollback(self.project_dir, 2, "noor"),
                         restore_data=True, on_step=lambda step, state, *_: steps.append(f"{step}:{state}"))
         self.assertIn("version 2", (self.server / "app" / "index.html").read_text())
         self.assertEqual(db.read_text(), "rows: 3\n")              # as it was when 2 was replaced
@@ -504,11 +504,11 @@ class LocalReleaseTests(ReleaseTestCase):
         with self.assertRaisesRegex(ReleaseError, "what’s live now"):
             places.rollback(self.project_dir, 1, self.ticket())
         with self.assertRaisesRegex(PlaceError, "no restore point 7"):
-            places.authorize_rollback(self.project_dir, 7, "nick")
+            places.authorize_rollback(self.project_dir, 7, "noor")
         self.change_site("version 2")
         self.release()
         with self.assertRaisesRegex(ReleaseError, "copy of the data"):
-            places.rollback(self.project_dir, 1, places.authorize_rollback(self.project_dir, 1, "nick"),
+            places.rollback(self.project_dir, 1, places.authorize_rollback(self.project_dir, 1, "noor"),
                             restore_data=True)
         with self.assertRaises(ProductionProtected):
             places.authorize_rollback(self.project_dir, 1, "priya")
@@ -604,7 +604,7 @@ class SshReleaseTests(ReleaseTestCase):
         store.write_project(project)
         self.ca = security.ProjectCA.create(PROJECT_ID)
         key = security.device_key()
-        self.ca.add_member("nick", "Nick", "owner", key.public_key)    # the owner's device; no certificate yet
+        self.ca.add_member("noor", "Noor", "owner", key.public_key)    # the owner's device; no certificate yet
         self.sshd = SshServer(self.tmp, self.ca, self.user)
         self.addCleanup(self.sshd.stop)
         self.srv = self.tmp / "srv"
@@ -661,7 +661,7 @@ class SshReleaseTests(ReleaseTestCase):
         self.assertIn("version 2", (kiln / "index.html").read_text())
         (self.srv / "db.txt").write_text("rows: 3\n")
 
-        ticket = places.authorize_rollback(self.project_dir, 1, "nick")
+        ticket = places.authorize_rollback(self.project_dir, 1, "noor")
         back = places.rollback(self.project_dir, 1, ticket, restore_data=True, bus=self.bus)
         self.assertTrue(back["ok"], back)
         self.assertIn("version 1", (kiln / "index.html").read_text())

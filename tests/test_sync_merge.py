@@ -89,17 +89,17 @@ class MarkdownTests(unittest.TestCase):
 
     def test_deterministic_whichever_side_merges(self):
         base = goal_text()
-        ours = goal_text(notes="Nick: keep it short.", updated="2026-10-09T10:05:00Z")
+        ours = goal_text(notes="Noor: keep it short.", updated="2026-10-09T10:05:00Z")
         theirs = goal_text(notes="Priya: add a count.", updated="2026-10-09T10:06:00Z")
         one = sync.merge_file("goals/x.md", base, ours, theirs).content
         two = sync.merge_file("goals/x.md", base, theirs, ours).content
         self.assertEqual(one, two)
-        self.assertIn(b"Nick: keep it short.", one)
+        self.assertIn(b"Noor: keep it short.", one)
         self.assertIn(b"Priya: add a count.", one)
 
     def test_decisions_appended_on_both_sides(self):
         base = b"# Decisions\n\nIntro.\n"
-        ours = base + b"\n### Use Postgres\n- who: Nick\n- why: it's what we know\n"
+        ours = base + b"\n### Use Postgres\n- who: Noor\n- why: it's what we know\n"
         theirs = base + b"\n### Send texts with Twilio\n- who: Priya\n"
         merged = sync.merge_file("decisions.md", base, ours, theirs).content.decode()
         self.assertIn("### Use Postgres", merged)
@@ -109,14 +109,14 @@ class MarkdownTests(unittest.TestCase):
 
 class StructuredTests(unittest.TestCase):
     def test_project_toml_members_by_id_and_removal_wins(self):
-        base = b'[project]\nname = "Kiln"\nid = "k"\n\n[[members]]\nid = "nick"\nname = "Nick"\nrole = "owner"\n\n' \
+        base = b'[project]\nname = "Kiln"\nid = "k"\n\n[[members]]\nid = "noor"\nname = "Noor"\nrole = "owner"\n\n' \
                b'[[members]]\nid = "sam"\nname = "Sam"\nrole = "builder"\n'
-        ours = base.replace(b'[[members]]\nid = "sam"\nname = "Sam"\nrole = "builder"\n', b"")   # Nick removed Sam
+        ours = base.replace(b'[[members]]\nid = "sam"\nname = "Sam"\nrole = "builder"\n', b"")   # Noor removed Sam
         theirs = base.replace(b'name = "Sam"', b'name = "Sam Lee"') + \
             b'\n[[members]]\nid = "priya"\nname = "Priya"\nrole = "builder"\n'
         merged = tomllib.loads(sync.merge_file("project.toml", base, ours, theirs).content.decode())
         ids = [m["id"] for m in merged["members"]]
-        self.assertEqual(ids, ["nick", "priya"])
+        self.assertEqual(ids, ["noor", "priya"])
 
     def test_stack_services_keep_changes_over_removals(self):
         base = b'[[services]]\nid = "resend"\nname = "Resend"\nplan = "free"\n'

@@ -63,7 +63,7 @@ class DetectTests(unittest.TestCase):
         item = found["ollama"]
         self.assertEqual(item.models, ["qwen3:8b"])
         self.assertTrue(item.signed_in)
-        offered = suggest(list(found.values()), "nick")
+        offered = suggest(list(found.values()), "noor")
         ari = next(c for c in offered if c.id == "ari-local")
         self.assertEqual((ari.endpoint, ari.model), ("ollama", "qwen3:8b"))
         self.assertGreaterEqual(endpoint_for(ari).context, ollama.MIN_CONTEXT)
@@ -71,7 +71,7 @@ class DetectTests(unittest.TestCase):
         item = {d.provider: d for d in detect(env={"PATH": "/nonexistent"}, ollama_host=self.host)}["ollama"]
         self.assertIn("no models yet", item.note)
         self.assertIn("ollama pull", item.note)
-        self.assertFalse([c for c in suggest([item], "nick") if c.id == "ari-local"])
+        self.assertFalse([c for c in suggest([item], "noor") if c.id == "ari-local"])
 
     def test_host_and_context_rules(self):
         self.assertEqual(ollama.host_from("http://localhost:11434/v1"), "http://localhost:11434")
@@ -146,7 +146,7 @@ class AriOnOllamaTests(AriBase):
         from luma_playground.agents.runner import GoalRunner
         url = self.server([])
         self.fake.models = []
-        conn = Connection(id="ari-local", label="Ari", kind="ari", provider="ari", owner="nick", endpoint="ollama",
+        conn = Connection(id="ari-local", label="Ari", kind="ari", provider="ari", owner="noor", endpoint="ollama",
                           base_url=url)
         runner = GoalRunner(self.root, self.goal.id, conn, self.bus,
                             sandbox_policy=sandbox.SandboxPolicy(self.root, backend="none"))

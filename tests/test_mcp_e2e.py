@@ -80,7 +80,7 @@ class McpProcess:
 class EndToEndTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        made = project.create_project("Kiln", root=self.tmp.name, owner=Member("nick", "Nick", "owner"), git=False,
+        made = project.create_project("Kiln", root=self.tmp.name, owner=Member("noor", "Noor", "owner"), git=False,
                                       bus=events.EventBus())
         self.root = made.path
         self.store = ProjectStore(self.root, bus=events.EventBus())
@@ -122,7 +122,7 @@ class EndToEndTests(unittest.TestCase):
                     pending = self.store.list_pending("decision")
                     if pending:
                         time.sleep(0.8)  # long enough for a keepalive or two
-                        self.store.answer_decision(pending[0].id, "both", by="nick")
+                        self.store.answer_decision(pending[0].id, "both", by="noor")
                         answered.set()
                         return
                     time.sleep(0.025)
@@ -136,7 +136,7 @@ class EndToEndTests(unittest.TestCase):
             self.assertTrue(answered.is_set())
             self.assertFalse(decision["isError"])
             self.assertEqual(decision["structuredContent"]["option"], "both")
-            self.assertIn("Nick decided", decision["content"][0]["text"])
+            self.assertIn("Noor decided", decision["content"][0]["text"])
             progress = [n for n in server.notifications if n["method"] == "notifications/progress"]
             self.assertTrue(progress, "keepalives while waiting")
             self.assertEqual(progress[0]["params"]["progressToken"], "wait-1")

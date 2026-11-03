@@ -91,7 +91,7 @@ class ProjectFileTests(StoreTestCase):
         project = Project(name="Kiln", id="abc", created="2026-09-26T15:02:00+00:00", home="dev-server",
                           summary="Class sign-ups", recipe=Recipe("A web app", "A VPS", [RecipePart("Pages", "HTML", "Quick")]),
                           places=[Place("dev-server", "Dev server", "development", "ssh", "203.0.113.7", "kiln", 22, "The closet")],
-                          members=[Member("nick", "Nick", "owner"), Member("priya", "Priya Raman", "builder", "priya@connect")])
+                          members=[Member("noor", "Noor", "owner"), Member("priya", "Priya Raman", "builder", "priya@connect")])
         self.store.write_project(project)
         back = self.store.read_project()
         self.assertEqual(back.to_dict() | {"last_activity": ""}, project.to_dict() | {"path": str(self.root)})
@@ -175,7 +175,7 @@ class BriefTests(StoreTestCase):
 
 class GoalTests(StoreTestCase):
     def test_round_trip(self):
-        goal = Goal(id="add-a-waitlist-7f3a", title="Add a waitlist", status=GoalStatus.NEEDS_YOU, owner="nick",
+        goal = Goal(id="add-a-waitlist-7f3a", title="Add a waitlist", status=GoalStatus.NEEDS_YOU, owner="noor",
                     connection="ari", size="medium", cost_estimate="About $0.60", status_note="one decision",
                     outcome="People can wait.", notes="Glaze night fills up.",
                     stories=[Story("Join", True, [Check("Button says Join waitlist", "pass")])],
@@ -224,7 +224,7 @@ class GoalTests(StoreTestCase):
 
 class LogTests(StoreTestCase):
     def test_activity(self):
-        self.store.log("Created Kiln", kind="created", actor="nick")
+        self.store.log("Created Kiln", kind="created", actor="noor")
         self.store.append_activity(ActivityEntry(summary="Asked", kind="decision", actor="ari", goal="g-0001",
                                                  data={"decision": "d"}))
         entries = self.store.read_activity()
@@ -249,7 +249,7 @@ class LogTests(StoreTestCase):
         self.assertEqual([e.summary for e in tail], ["n1997", "n1998", "n1999"])
 
     def test_thread(self):
-        entry = self.store.append_thread("g-0001", ThreadEntry(kind="message", role="person", by="nick", text="Hi"))
+        entry = self.store.append_thread("g-0001", ThreadEntry(kind="message", role="person", by="noor", text="Hi"))
         self.assertTrue(entry.id and entry.ts)
         self.store.append_thread("g-0001", ThreadEntry(kind="step", data={"title": "Did it", "files": ["a"]}))
         thread = self.store.read_thread("g-0001")
@@ -272,8 +272,8 @@ class LogTests(StoreTestCase):
 class DecisionTests(StoreTestCase):
     def test_decisions_md(self):
         self.store.append_decision(Decision(title="Classes cap at eight", chosen="Eight", why="One wheel each.",
-                                            who="Maya, via Nick"))
-        self.store.append_decision(Decision(title="Texts, then email", chosen="Both", who="Nick", goal="g-0001", id="d-1"))
+                                            who="Maya, via Noor"))
+        self.store.append_decision(Decision(title="Texts, then email", chosen="Both", who="Noor", goal="g-0001", id="d-1"))
         with open(self.store.paths.decisions, "a") as handle:
             handle.write("\n### By hand\n- who: Sam\n- mood: good\nBecause it reads better.\n")
         decisions = self.store.read_decisions()
@@ -294,7 +294,7 @@ class DecisionTests(StoreTestCase):
         self.assertEqual([p.id for p in self.store.list_pending("decision")], [pending.id])
         self.assertTrue(self.store.read_thread("waitlist-0001")[0].data["open"])
 
-        answer = self.store.answer_decision(pending.id, "email", by="nick")
+        answer = self.store.answer_decision(pending.id, "email", by="noor")
         self.assertEqual(answer.label, "An email")
         self.assertEqual(self.store.read_answer(pending.id).to_dict(), answer.to_dict())
         self.assertEqual(self.store.list_pending("decision"), [])
@@ -325,9 +325,9 @@ class DecisionTests(StoreTestCase):
         self.assertIsNone(self.store.read_pending("screenshot-0001"))
 
     def test_hand_written_answer_aliases(self):
-        self.store.paths.answer("d-0001").write_text('{"option": "text", "by": "nick", "ts": "2026-10-09"}')
+        self.store.paths.answer("d-0001").write_text('{"option": "text", "by": "noor", "ts": "2026-10-09"}')
         answer = self.store.read_answer("d-0001")
-        self.assertEqual((answer.id, answer.answered_by, answer.answered_at), ("d-0001", "nick", "2026-10-09"))
+        self.assertEqual((answer.id, answer.answered_by, answer.answered_at), ("d-0001", "noor", "2026-10-09"))
 
 
 class KnowledgeTests(StoreTestCase):

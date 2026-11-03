@@ -58,7 +58,7 @@ class Base(unittest.TestCase):
 class SignInTests(Base):
     def test_first_sign_in_registers_and_keeps_tokens_out_of_sight(self):
         account = self.sign_in()
-        self.assertEqual(account.email, "nick@example.com")
+        self.assertEqual(account.email, "noor@example.com")
         self.assertEqual(account.client_id, self.issuer.issued_client)
         self.assertTrue(account.plan_usage)
         q = self.authorize_calls()[0]
@@ -94,7 +94,7 @@ class SignInTests(Base):
         self.assertEqual(q["client_id"], self.issuer.issued_client)
         self.assertNotIn("agent_name_hint", q)
         self.assertTrue(q["id_token_hint"])
-        self.assertEqual(q["login_hint"], "nick@example.com")
+        self.assertEqual(q["login_hint"], "noor@example.com")
         self.assertEqual(q["ext_agent_host_id"], host)
 
     def test_saying_no_changes_nothing(self):
@@ -133,7 +133,7 @@ class SignInTests(Base):
             self.assertFalse(chatgpt.enabled())
             self.assertEqual(chatgpt.status("ari-chatgpt", self.store)["state"], "coming-soon")
             ep = endpoint_for(Connection(id="ari-chatgpt", label="Ari", kind="ari", provider="ari",
-                                         endpoint="chatgpt", owner="nick"))
+                                         endpoint="chatgpt", owner="noor"))
             self.assertIsNone(ep.token_source)
         with mock.patch.dict(os.environ, {"PLAYGROUND_SIWC": ""}):
             self.assertTrue(chatgpt.enabled())                 # on unless turned off
@@ -259,10 +259,10 @@ class AriOnPlanTests(Base):
         super().setUp()
         self.bus = EventBus()
         project = create_project("Kiln", "A pottery class sign-up", root=self.base / "projects", git=False,
-                                 bus=self.bus, owner=Member(id="nick", name="Nick", role="owner"))
+                                 bus=self.bus, owner=Member(id="noor", name="Noor", role="owner"))
         self.root = str(project.path)
         self.pstore = ProjectStore(self.root, bus=self.bus)
-        self.goal = self.pstore.create_goal("Say hi", outcome="hello.txt says hi", owner="nick")
+        self.goal = self.pstore.create_goal("Say hi", outcome="hello.txt says hi", owner="noor")
         self.states: list[dict] = []
         self.bus.subscribe("agent.state", lambda **kw: self.states.append(kw))
 
@@ -272,7 +272,7 @@ class AriOnPlanTests(Base):
         return self.fake.start()
 
     def connection(self, url: str) -> Connection:
-        return Connection(id="ari-chatgpt", label="Ari", kind="ari", provider="ari", owner="nick",
+        return Connection(id="ari-chatgpt", label="Ari", kind="ari", provider="ari", owner="noor",
                           endpoint="chatgpt", base_url=url)
 
     def runner(self, url: str) -> GoalRunner:

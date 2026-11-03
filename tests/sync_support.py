@@ -30,7 +30,7 @@ TOOLS_SKIP = "needs git and ssh-keygen"
 
 
 class SyncWorld(unittest.TestCase):
-    """Nick (owner) and Priya (builder), each with their own computer, in one temp folder."""
+    """Noor (owner) and Priya (builder), each with their own computer, in one temp folder."""
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory(prefix="pg-sync-")
@@ -45,10 +45,10 @@ class SyncWorld(unittest.TestCase):
         fake.chmod(fake.stat().st_mode | stat.S_IXUSR)
         os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
         os.environ["PLAYGROUND_CONFIG_DIR"] = str(self.tmp / "config")
-        self.data = {"nick": self.tmp / "nick-data", "priya": self.tmp / "priya-data", "rae": self.tmp / "rae-data"}
+        self.data = {"noor": self.tmp / "noor-data", "priya": self.tmp / "priya-data", "rae": self.tmp / "rae-data"}
         self.roots = {name: self.tmp / f"{name}-projects" for name in self.data}
         self.engines: list[sync.SyncEngine] = []
-        self.as_member("nick")
+        self.as_member("noor")
 
     def tearDown(self) -> None:
         for engine in self.engines:
@@ -77,9 +77,9 @@ class SyncWorld(unittest.TestCase):
             os.environ["PLAYGROUND_DATA_DIR"], os.environ["PLAYGROUND_HOME"] = before
 
     def make_project(self) -> Path:
-        with self.member("nick"):
-            project = create_project("Kiln", brief="Pottery classes, booked online.", root=self.roots["nick"],
-                                     owner=Member(id="nick", name="Nick", role="owner"))
+        with self.member("noor"):
+            project = create_project("Kiln", brief="Pottery classes, booked online.", root=self.roots["noor"],
+                                     owner=Member(id="noor", name="Noor", role="owner"))
         store = ProjectStore(project.path)
         current = store.read_project()
         current.members.append(Member(id="priya", name="Priya", role="builder"))

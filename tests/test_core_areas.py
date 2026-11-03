@@ -18,35 +18,35 @@ class AreaTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         project = create_project("Rally", "Rides to games", root=Path(self.tmp.name), git=False,
-                                 owner=Member(id="nick", name="Nick", role="owner"))
+                                 owner=Member(id="noor", name="Noor", role="owner"))
         self.root = project.path
         self.store = ProjectStore(self.root)
         self.paths = ProjectPaths(self.root)
 
     def test_tasks_get_random_ids_and_show_in_the_index(self):
-        a = self.store.create_task("Let parents offer rides", by="person:nick", priority="high")
+        a = self.store.create_task("Let parents offer rides", by="person:noor", priority="high")
         b = self.store.create_task("Show an empty schedule kindly", by="agent:codex@xps")
         self.assertRegex(a.id, r"^t-[0-9a-hjkmnp-tv-z]{5}$")
         self.assertNotEqual(a.id, b.id)
-        self.assertEqual(self.store.read_task(a.id).created_by, "person:nick")
+        self.assertEqual(self.store.read_task(a.id).created_by, "person:noor")
         index = self.paths.index("tasks").read_text()
         self.assertIn(f"- {a.id} · high · Let parents offer rides", index.split("## Ready to pick up")[1])
         self.assertLess(index.index(a.id), index.index(b.id))   # high priority first
         self.assertNotIn("index", self.store.task_ids())
 
     def test_blocked_tasks_wait_and_ready_ones_lead(self):
-        first = self.store.create_task("Save seats in the database", by="person:nick")
-        later = self.store.create_task("Show seats on the class page", by="person:nick")
-        self.store.update_task(later.id, lambda t: t.extra.__setitem__("blocked_by", [first.id]), by="person:nick")
+        first = self.store.create_task("Save seats in the database", by="person:noor")
+        later = self.store.create_task("Show seats on the class page", by="person:noor")
+        self.store.update_task(later.id, lambda t: t.extra.__setitem__("blocked_by", [first.id]), by="person:noor")
         index = self.paths.index("tasks").read_text()
         ready, waiting = index.split("## Ready to pick up")[1].split("## Waiting")
         self.assertIn(first.id, ready)
         self.assertIn(f"blocked by {first.id}", waiting)
-        self.store.update_task(first.id, lambda t: setattr(t, "status", "done"), by="person:nick")
+        self.store.update_task(first.id, lambda t: setattr(t, "status", "done"), by="person:noor")
         self.assertIn(later.id, self.paths.index("tasks").read_text().split("## Ready to pick up")[1].split("##")[0])
 
     def test_claims_keep_two_agents_off_the_same_task(self):
-        task = self.store.create_task("Remind families", by="person:nick")
+        task = self.store.create_task("Remind families", by="person:noor")
         claimed = self.store.claim_task(task.id, "agent:codex@xps")
         self.assertEqual((claimed.status, claimed.claimed_by), ("doing", "agent:codex@xps"))
         with self.assertRaises(StoreError):
@@ -130,7 +130,7 @@ class AreaTests(unittest.TestCase):
         self.store.post_channel("Renaming src/auth to src/sign-in", by="agent:claude@xps", kind="heads-up",
                                 conversation="other-chat")
         self.store.post_channel("I'm on it", by="codex", kind="start", conversation="this-chat")
-        self.store.create_task("Let parents offer rides", by="person:nick")
+        self.store.create_task("Let parents offer rides", by="person:noor")
         self.store.create_issue("A reserved seat is lost", severity="high")
         self.store.write_knowledge(KnowledgeNote(slug="no-notes", title="Never publish internal notes",
                                                  extra={"kind": "rule", "status": "kept"}))
@@ -143,7 +143,7 @@ class AreaTests(unittest.TestCase):
         self.assertLessEqual(text.count("\n- "), areas.BRIEF_LINES)
 
     def test_a_sub_project_lives_inside_and_names_its_parent(self):
-        child = create_project("Notes app", parent=self.root, git=False, owner=Member(id="nick", name="Nick"))
+        child = create_project("Notes app", parent=self.root, git=False, owner=Member(id="noor", name="Noor"))
         self.assertEqual(child.path.parent, self.root)
         text = ProjectPaths(child.path).agents_md.read_text()
         self.assertIn("This is a sub-project of **", text)

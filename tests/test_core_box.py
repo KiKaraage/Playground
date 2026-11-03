@@ -17,7 +17,7 @@ class BoxTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = project.create_project("Sticky Notes", root=self.tmp.name, git=False, bus=events.EventBus(),
-                                           owner=Member(id="nick", name="Nick", role="owner")).path
+                                           owner=Member(id="noor", name="Noor", role="owner")).path
 
     def tearDown(self):
         self.tmp.cleanup()

@@ -34,10 +34,10 @@ class AriBase(unittest.TestCase):
         self.addCleanup(patcher.stop)
         self.bus = EventBus()
         project = create_project("Kiln", "A pottery class sign-up", root=base / "projects", git=False, bus=self.bus,
-                                 owner=Member(id="nick", name="Nick", role="owner"))
+                                 owner=Member(id="noor", name="Noor", role="owner"))
         self.root = str(project.path)
         self.store = ProjectStore(self.root, bus=self.bus)
-        self.goal = self.store.create_goal("Say hi", outcome="hello.txt says hi", owner="nick")
+        self.goal = self.store.create_goal("Say hi", outcome="hello.txt says hi", owner="noor")
         self.updates: list[dict] = []
         self.asked: list[dict] = []
         self.servers: list[FakeOpenAI] = []
@@ -155,7 +155,7 @@ class AriLoopTests(AriBase):
 
         def answer():
             if asked.wait(60):
-                self.store.answer_decision(seen[0]["id"], "green", by="nick")
+                self.store.answer_decision(seen[0]["id"], "green", by="noor")
 
         threading.Thread(target=answer, daemon=True).start()
         self.assertEqual(ari.prompt(sid, [acp.text_block("pick")]), "end_turn")

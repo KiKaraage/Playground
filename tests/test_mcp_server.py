@@ -16,7 +16,7 @@ from luma_playground.core.model import GoalStatus, Member, Place
 from luma_playground.core.store import ProjectStore
 from luma_playground.mcp import server as mcp
 
-NICK = Member(id="nick", name="Nick", role="owner")
+NOOR = Member(id="noor", name="Noor", role="owner")
 MODERN = {"io.modelcontextprotocol/protocolVersion": "2026-07-28",
           "io.modelcontextprotocol/clientInfo": {"name": "Test Agent", "version": "1"}}
 
@@ -24,7 +24,7 @@ MODERN = {"io.modelcontextprotocol/protocolVersion": "2026-07-28",
 class ServerTestCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        made = project.create_project("Kiln", root=self.tmp.name, owner=NICK, git=False, bus=events.EventBus())
+        made = project.create_project("Kiln", root=self.tmp.name, owner=NOOR, git=False, bus=events.EventBus())
         self.root = made.path
         self.store = ProjectStore(self.root, bus=events.EventBus())
         self.out = io.BytesIO()
@@ -157,7 +157,7 @@ class GoalToolTests(ServerTestCase):
                                                               "checks": ["The button says Join waitlist", "They see their place"]}])
         goal_id = goal["id"]
         self.assertEqual(goal["connection"], "ari")
-        self.assertEqual(goal["owner"], "nick")
+        self.assertEqual(goal["owner"], "noor")
         self.assertEqual(self.store.read_thread(goal_id)[0].kind, "plan")
         got = self.ok("playground_goal_get", goal_id=goal_id)
         self.assertEqual(got["stories"][0]["checks"][0]["status"], "pending")
@@ -397,7 +397,7 @@ class DecisionToolTests(ServerTestCase):
         self.options = [{"id": "text", "label": "A text message", "consequence": "Quick"},
                         {"id": "email", "label": "An email", "consequence": "Slower"}]
 
-    def answer_soon(self, option, by="nick"):
+    def answer_soon(self, option, by="noor"):
         def respond():
             pending = self.store.list_pending("decision")
             if len(pending) != 1:
@@ -419,7 +419,7 @@ class DecisionToolTests(ServerTestCase):
                        options=self.options, recommended="A text message")
         finish()
         self.assertEqual(data.get("state"), "answered", data)
-        self.assertEqual((data["option"], data["label"], data["answered_by"]), ("email", "An email", "nick"))
+        self.assertEqual((data["option"], data["label"], data["answered_by"]), ("email", "An email", "noor"))
         self.assertEqual(self.store.list_pending(), [])
         self.assertEqual(self.store.read_goal(self.goal_id).status, GoalStatus.WORKING)
         card = [e for e in self.store.read_thread(self.goal_id) if e.kind == "decision"][0]
@@ -434,7 +434,7 @@ class DecisionToolTests(ServerTestCase):
     def test_without_waiting(self):
         data = self.ok("playground_decision_ask", goal_id=self.goal_id, question="Q?", options=self.options, wait=False)
         self.assertEqual(self.ok("playground_decision_get", decision_id=data["decision_id"])["state"], "waiting")
-        self.store.answer_decision(data["decision_id"], "text", by="nick")
+        self.store.answer_decision(data["decision_id"], "text", by="noor")
         self.assertEqual(self.ok("playground_decision_get", decision_id=data["decision_id"])["option"], "text")
 
     def test_timeout_closes_the_question(self):

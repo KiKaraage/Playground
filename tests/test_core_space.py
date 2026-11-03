@@ -102,7 +102,7 @@ class StackTests(SpaceTestCase):
 class IssueTests(SpaceTestCase):
     def test_numbers_round_trip_and_events(self):
         first = self.store.create_issue("Glaze night showed 9 of 8 wheels", severity="high", place="live",
-                                        reporter="nick", what_happened="Nine booked.", expected="Eight at most.",
+                                        reporter="noor", what_happened="Nine booked.", expected="Eight at most.",
                                         steps="1. Book twice at once", evidence="Two bookings 40 ms apart.")
         second = self.store.create_issue("Maya's view is hard to read outside", severity="low")
         self.assertEqual((first.number, second.number), (1, 2))

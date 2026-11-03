@@ -27,11 +27,11 @@ class HandoffTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         project = create_project("Kiln", "A pottery class sign-up", root=base, git=False, bus=EventBus(),
-                                 owner=Member(id="nick", name="Nick", role="owner"))
+                                 owner=Member(id="noor", name="Noor", role="owner"))
         self.root = project.path
         self.store = ProjectStore(self.root, bus=EventBus())
         self.goal = self.store.create_goal(
-            "Add a waitlist", outcome="Parents can join a waitlist when a class is full.", owner="nick",
+            "Add a waitlist", outcome="Parents can join a waitlist when a class is full.", owner="noor",
             stories=[Story("A parent can join the waitlist", checks=[Check("When the class is full, the button says Join waitlist", "pass")]),
                      Story("The teacher sees who is waiting")])
         self.claude = Connection(id="claude", label="Claude", kind="personal-plan", provider="claude")

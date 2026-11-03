@@ -91,7 +91,7 @@ class WaitingStatusTests(DeviceCase):
         from luma_playground.core import events, samples
         project = samples.create_sample_kiln(self.base / "home", git=False, bus=events.EventBus())
         data = window.ProjectData(project.path, events.EventBus())
-        data.you = lambda: "nick"
+        data.you = lambda: "noor"
         by_id = {g["id"]: g for g in data.goals()}
         texts = by_id[samples.TEXTS]                    # Priya's goal runs on her computer
         self.assertEqual(texts["status"], "working")
@@ -109,11 +109,11 @@ class WaitingStatusTests(DeviceCase):
         from luma_playground.core.store import ProjectStore
         bus = events.EventBus()
         made = create_project("Sprig", root=self.base / "home", git=False, bus=bus,
-                              owner=Member(id="nick", name="Nick", role="owner"))
-        goal = ProjectStore(made.path, bus=bus).create_goal("Get a first version on screen", owner="nick")
+                              owner=Member(id="noor", name="Noor", role="owner"))
+        goal = ProjectStore(made.path, bus=bus).create_goal("Get a first version on screen", owner="noor")
         ProjectStore(made.path, bus=bus).update_goal(goal.id, lambda g: setattr(g, "status", GoalStatus.WORKING))
         data = window.ProjectData(made.path, bus)
-        data.you = lambda: "nick"
+        data.you = lambda: "noor"
         first = {g["id"]: g for g in data.goals()}[goal.id]
         self.assertEqual(first["status"], "waiting")
         self.assertEqual(rail.goal_subtitle(first), "Waiting for an agent")

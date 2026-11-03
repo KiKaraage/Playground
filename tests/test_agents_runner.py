@@ -173,13 +173,13 @@ class RunnerBase(unittest.TestCase):
         self.states: list[dict] = []
         self.bus.subscribe("agent.state", lambda **kw: self.states.append(kw))
         project = create_project("Kiln", "A pottery class sign-up", root=base / "projects", git=False, bus=self.bus,
-                                 owner=Member(id="nick", name="Nick", role="owner"))
+                                 owner=Member(id="noor", name="Noor", role="owner"))
         self.root = str(project.path)
         self.store = ProjectStore(self.root, bus=self.bus)
-        self.goal = self.store.create_goal("Say hi", outcome="hello.txt says hi", owner="nick")
+        self.goal = self.store.create_goal("Say hi", outcome="hello.txt says hi", owner="noor")
         self.agent_env = dict(os.environ, FAKE_ACP_STATE=str(self.state))
         self.runners: list[GoalRunner] = []
-        self.claude = Connection(id="claude", label="Claude", kind="personal-plan", provider="claude", owner="nick")
+        self.claude = Connection(id="claude", label="Claude", kind="personal-plan", provider="claude", owner="noor")
 
     def tearDown(self) -> None:
         for runner in self.runners:
@@ -379,7 +379,7 @@ class RunnerTurnTests(RunnerBase):
         # Usage was recorded for the connection.
         runs = Path(os.environ["PLAYGROUND_DATA_DIR"], "usage", "runs.jsonl").read_text()
         self.assertIn('"connection": "claude"', runs)
-        self.assertIn("Runs on Nick's Claude", runs)
+        self.assertIn("Runs on Noor's Claude", runs)
 
     def test_ask_policy_turns_permission_into_a_decision_card(self):
         runner = self.runner(permission_policy="ask")
@@ -419,7 +419,7 @@ class RunnerTurnTests(RunnerBase):
         runner.send("make hello")
         self.wait_for(lambda: any(c.kind == "decision" for c in self.thread()))
         card = next(c for c in self.thread() if c.kind == "decision")
-        self.store.answer_decision(card.data["id"], "allow", by="nick")
+        self.store.answer_decision(card.data["id"], "allow", by="noor")
         self.assertTrue(runner.wait_idle(30))
         self.assertTrue(Path(self.root, "hello.txt").exists())
 
@@ -470,7 +470,7 @@ class RunnerTurnTests(RunnerBase):
         runner = self.runner()
         runner.send("two-steps")
         self.assertTrue(runner.wait_idle(30))
-        codex = Connection(id="codex", label="Codex", kind="personal-plan", provider="codex", owner="nick")
+        codex = Connection(id="codex", label="Codex", kind="personal-plan", provider="codex", owner="noor")
         runner.switch(codex)
         self.assertTrue(runner.wait_idle(30))
         handoff = [c for c in self.thread() if c.kind == "handoff"][-1]
@@ -492,7 +492,7 @@ class RunnerTurnTests(RunnerBase):
         runner = self.runner()
         runner.send("two-steps")
         self.assertTrue(runner.wait_idle(30))
-        renamed = Connection(id="claude", label="Claude (renamed)", kind="personal-plan", provider="claude", owner="nick")
+        renamed = Connection(id="claude", label="Claude (renamed)", kind="personal-plan", provider="claude", owner="noor")
         runner.switch(renamed)
         self.assertTrue(runner.wait_idle(30))
         self.assertFalse(any(c.kind == "handoff" for c in self.thread()))
@@ -507,7 +507,7 @@ class RunnerTurnTests(RunnerBase):
         self.assertIn("own plan", last.text)
         self.assertEqual(self.calls(), [])  # the agent was never started
         with self.assertRaises(Exception):
-            runner.switch(Connection(id="nicks", label="Nick's", kind="personal-plan", provider="codex", owner="nick"))
+            runner.switch(Connection(id="noors", label="Noor's", kind="personal-plan", provider="codex", owner="noor"))
 
     def test_sign_in_needed_then_terminal_login_then_retry(self):
         self.agent_env["FAKE_ACP_AUTH"] = "1"
@@ -556,7 +556,7 @@ class RunnerAriTests(RunnerBase):
             {"text": "Done."}])
         url = fake.start()
         self.addCleanup(fake.stop)
-        ari = Connection(id="ari-local", label="Ari", kind="ari", provider="ari", owner="nick", endpoint="ollama",
+        ari = Connection(id="ari-local", label="Ari", kind="ari", provider="ari", owner="noor", endpoint="ollama",
                          base_url=url, model="qwen3.8:27b")
         runner = GoalRunner(self.root, self.goal.id, ari, self.bus,
                             sandbox_policy=sandbox.SandboxPolicy(self.root, backend="none"))

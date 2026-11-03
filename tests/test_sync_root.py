@@ -109,11 +109,11 @@ class RootSetupTests(base.ServerHomeTests):
 
         prefix = security.principal_prefix(self.project_id)
         self.assertIn(f'cert-authority,principals="{prefix}-development,{prefix}-preview",', ask("priya"))
-        self.assertIn(f'{prefix}-production', ask("nick"))
-        with self.member("nick"):
-            sync.remove_member_access(self.nick_dir, "priya")
+        self.assertIn(f'{prefix}-production', ask("noor"))
+        with self.member("noor"):
+            sync.remove_member_access(self.noor_dir, "priya")
         self.assertEqual(ask("priya"), "")
-        self.assertIn(f"{prefix}-development", ask("nick"))
+        self.assertIn(f"{prefix}-development", ask("noor"))
 
     def test_a_shell_can_put_back_an_old_list_but_not_one_whose_time_is_up(self):
         try:
@@ -121,22 +121,22 @@ class RootSetupTests(base.ServerHomeTests):
             rae_dir = self.join("Rae", "rae", "viewer")
         except sync.SyncError:
             self.fail("joining failed; sshd says:\n" + self.sshd_log())
-        nick, priya, rae = (self.engine(self.nick_dir, "nick"), self.engine(priya_dir, "priya"),
+        noor, priya, rae = (self.engine(self.noor_dir, "noor"), self.engine(priya_dir, "priya"),
                             self.engine(rae_dir, "rae"))
-        self.settle(nick, priya, rae)
+        self.settle(noor, priya, rae)
         # A list from three days ago, with Rae on it: properly signed, but its time is up.
-        with self.member("nick"):
-            desk = sync.OwnerDesk(self.nick_dir, self.data["nick"], now=time.time() - sync.ACCESS_VALID_S - 600)
+        with self.member("noor"):
+            desk = sync.OwnerDesk(self.noor_dir, self.data["noor"], now=time.time() - sync.ACCESS_VALID_S - 600)
             desk.publish_access(force=True)
-        old = git(self.nick_dir, "rev-parse", sync.ACCESS_REF).stdout.strip()
-        git(self.nick_dir, "update-ref", "refs/playground/old-list", old)
-        self.assertEqual(nick.sync_now()["state"], "up-to-date")          # a fresh list goes out again
-        with self.member("nick"):
-            sync.remove_member_access(self.nick_dir, "rae")
+        old = git(self.noor_dir, "rev-parse", sync.ACCESS_REF).stdout.strip()
+        git(self.noor_dir, "update-ref", "refs/playground/old-list", old)
+        self.assertEqual(noor.sync_now()["state"], "up-to-date")          # a fresh list goes out again
+        with self.member("noor"):
+            sync.remove_member_access(self.noor_dir, "rae")
         self.assertEqual(rae.sync_now()["state"], "removed")
         # Priya, a builder with a shell, puts the old list back on the server and tries to change the gate.
         repo = self.server_home / "repo.git"
-        git(repo, "fetch", "-q", str(self.nick_dir), "+refs/playground/old-list:refs/playground/old-list")
+        git(repo, "fetch", "-q", str(self.noor_dir), "+refs/playground/old-list:refs/playground/old-list")
         opened = self.shell("priya", f"git --git-dir={repo} update-ref refs/playground/access {old} && "
                                      f"echo put-back; echo x >> {self.project_dir_on_server() / 'gate'}")
         self.assertIn("put-back", opened.stdout)
@@ -145,8 +145,8 @@ class RootSetupTests(base.ServerHomeTests):
         status = rae.sync_now()
         self.assertNotEqual(status["state"], "up-to-date", status)
         self.assertNotIn("let-me-in", self.shell("priya", "echo let-me-in").stdout)   # nor shells, for anyone
-        # Nick's Playground puts a current list back, and everyone else is in again.
-        self.assertEqual(nick.sync_now()["state"], "up-to-date")
+        # Noor's Playground puts a current list back, and everyone else is in again.
+        self.assertEqual(noor.sync_now()["state"], "up-to-date")
         self.assertIn("let-me-in", self.shell("priya", "echo let-me-in").stdout)
         self.assertNotEqual(rae.sync_now()["state"], "up-to-date")
 

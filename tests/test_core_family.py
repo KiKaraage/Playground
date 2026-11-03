@@ -13,7 +13,7 @@ from luma_playground.core.model import KnowledgeNote, Member
 from luma_playground.core.store import ProjectStore
 from luma_playground.mcp import server as mcp
 
-NICK = Member(id="nick", name="Nick", role="owner")
+NOOR = Member(id="noor", name="Noor", role="owner")
 
 
 class FamilySetup(unittest.TestCase):
@@ -24,7 +24,7 @@ class FamilySetup(unittest.TestCase):
         env.start()
         self.addCleanup(env.stop)
         family.forget()
-        self.luma = project.create_project("Luma", "An operating system", root=self.home / "Projects", owner=NICK,
+        self.luma = project.create_project("Luma", "An operating system", root=self.home / "Projects", owner=NOOR,
                                            git=False).path
         self.luma_store = ProjectStore(self.luma)
         self.luma_store.write_knowledge(KnowledgeNote(slug="lucide-only", title="Icons are Lucide only",
@@ -88,7 +88,7 @@ class FamilyTests(FamilySetup):
         self.assertIn("new rule in Luma, follow it here too: Icons are Lucide only", brief)
 
     def test_a_new_part_can_sit_anywhere_inside(self):
-        clock = project.create_project("Clock", root=self.luma / "src" / "apps", parent=self.luma, owner=NICK,
+        clock = project.create_project("Clock", root=self.luma / "src" / "apps", parent=self.luma, owner=NOOR,
                                        git=False).path
         self.assertEqual(clock.parent, self.luma / "src" / "apps")
         family.forget()

@@ -22,12 +22,12 @@ class UsageTests(PlatformTestCase):
         self.bus.subscribe(events.USAGE_CHANGED, lambda **kw: self.calls.append(kw))
 
     def test_runs_are_stored_per_device_with_unknowns_left_unknown(self):
-        record = usage.record_run("nick-claude", runs_on="Nick's Claude", tokens_in=1200, tokens_out=800,
+        record = usage.record_run("noor-claude", runs_on="Noor's Claude", tokens_in=1200, tokens_out=800,
                                   duration_s=42.5, goal_id="add-a-waitlist-7f3a", when=NOW, bus=self.bus)
         self.assertNotIn("cost", record)
         usage.record_run("team-key", cost=0.42, tokens_in=10, when=NOW, bus=self.bus)
         self.assertEqual(len(usage.runs()), 2)
-        self.assertEqual(usage.runs("nick-claude")[0]["runs_on"], "Nick's Claude")
+        self.assertEqual(usage.runs("noor-claude")[0]["runs_on"], "Noor's Claude")
         path = self.data / "usage" / "runs.jsonl"
         self.assertTrue(path.exists())
         self.assertFalse(str(path).startswith(str(self.project_dir)))
@@ -36,14 +36,14 @@ class UsageTests(PlatformTestCase):
             usage.record_run("../evil")
 
     def test_summary_from_headroom(self):
-        usage.record_headroom("nick-claude", 62, resets_at=datetime(2026, 10, 13, 9, 0, tzinfo=UTC), when=NOW)
-        self.assertEqual(usage.summary("nick-claude", NOW, tz=UTC), "62% of the week left · resets Tue")
-        usage.record_headroom("nick-codex", 40, window="5h", resets_at=NOW + timedelta(hours=3), when=NOW)
-        self.assertEqual(usage.summary("nick-codex", NOW, tz=UTC), "40% of this 5-hour window left · resets at 15:00")
+        usage.record_headroom("noor-claude", 62, resets_at=datetime(2026, 10, 13, 9, 0, tzinfo=UTC), when=NOW)
+        self.assertEqual(usage.summary("noor-claude", NOW, tz=UTC), "62% of the week left · resets Tue")
+        usage.record_headroom("noor-codex", 40, window="5h", resets_at=NOW + timedelta(hours=3), when=NOW)
+        self.assertEqual(usage.summary("noor-codex", NOW, tz=UTC), "40% of this 5-hour window left · resets at 15:00")
         usage.record_headroom("far", 90, resets_at=datetime(2026, 10, 30, tzinfo=UTC), when=NOW)
         self.assertEqual(usage.summary("far", NOW, tz=UTC), "90% of the week left · resets 30 Oct")
         later = datetime(2026, 10, 14, tzinfo=UTC)
-        self.assertEqual(usage.summary("nick-claude", later, tz=UTC), "A new allowance has started; no reading yet.")
+        self.assertEqual(usage.summary("noor-claude", later, tz=UTC), "A new allowance has started; no reading yet.")
         with self.assertRaises(ValueError):
             usage.record_headroom("x", 140)
 

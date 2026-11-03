@@ -125,7 +125,7 @@ class FakeIssuer:
         self.bad_signature = False
         self.fail_refresh = ""
         self.subject = "user-123"
-        self.email = "nick@example.com"
+        self.email = "noor@example.com"
         self.issued_client = "oaiapp_" + secrets.token_hex(6)
         self.codes: dict[str, dict] = {}
         self.refresh_tokens: dict[str, str] = {}   # refresh token -> client id (current ones only)

@@ -36,12 +36,12 @@ def free_port() -> int:
 @unittest.skipUnless(HAVE_SSH_KEYGEN, "ssh-keygen isn't installed")
 class DeviceKeyTests(PlatformTestCase):
     def test_keygen_makes_private_files_and_never_shares_the_private_half(self):
-        key = security.device_key(connect_id="nick@luma.connect")
+        key = security.device_key(connect_id="noor@luma.connect")
         self.assertEqual(mode(key.private_path), 0o600)
         self.assertEqual(mode(key.private_path.parent), 0o700)
         self.assertTrue(key.public_key.startswith("ssh-ed25519 "))
         self.assertTrue(key.fingerprint.startswith("SHA256:"))
-        self.assertEqual(key.connect_id, "nick@luma.connect")
+        self.assertEqual(key.connect_id, "noor@luma.connect")
         shared = json.dumps(key.public_dict())
         self.assertNotIn("PRIVATE", shared)
         self.assertNotIn(str(key.private_path), shared)
@@ -128,12 +128,12 @@ class CertificateAuthorityTests(PlatformTestCase):
         self.ca.add_member("rae", "Rae", "reviewer", self.key.public_key)
         with self.assertRaisesRegex(SecurityError, "don't get server access"):
             self.ca.issue("rae")
-        self.ca.add_member("nick", "Nick", "owner", self.key.public_key)
-        prod = self.ca.issue("nick", place_roles=["production"])
+        self.ca.add_member("noor", "Noor", "owner", self.key.public_key)
+        prod = self.ca.issue("noor", place_roles=["production"])
         self.assertEqual(prod.principals, [security.principal_for(PROJECT_ID, "production")])
         self.assertNotIn("permit-port-forwarding", prod.extensions)
         with self.assertRaises(SecurityError):
-            self.ca.issue("nick", hours=48)
+            self.ca.issue("noor", hours=48)
         with self.assertRaises(SecurityError):
             self.ca.issue("stranger")
 
@@ -316,7 +316,7 @@ class VaultWithoutCryptoTests(PlatformTestCase):
             status = vault.status()
             self.assertFalse(status["available"])
             self.assertIn("python3-cryptography", status["reason"])
-            for call in (lambda: vault.create("nick", "Nick"), lambda: vault.set("API_KEY", "sk-live-123456"),
+            for call in (lambda: vault.create("noor", "Noor"), lambda: vault.set("API_KEY", "sk-live-123456"),
                          lambda: vault.get("API_KEY"), lambda: vault.names()):
                 with self.assertRaises(security.VaultUnavailable):
                     call()
@@ -337,16 +337,16 @@ class VaultTests(PlatformTestCase):
 
     def setUp(self):
         super().setUp()
-        self.nick = security.VaultIdentity.generate("nick-laptop")
+        self.noor = security.VaultIdentity.generate("noor-laptop")
         self.priya = security.VaultIdentity.generate("priya-laptop")
         self.sam = security.VaultIdentity.generate("sam-desktop")
         self.vaults = {name: Vault(self.project_dir, PROJECT_ID, identity=ident, trust_dir=self.tmp / f"trust-{name}")
-                       for name, ident in (("nick", self.nick), ("priya", self.priya), ("sam", self.sam))}
-        self.vaults["nick"].create("nick", "Nick")
+                       for name, ident in (("noor", self.noor), ("priya", self.priya), ("sam", self.sam))}
+        self.vaults["noor"].create("noor", "Noor")
         for name, value in self.SECRETS.items():
-            self.vaults["nick"].set(name, value)
-        self.vaults["nick"].add_member("priya", "Priya", self.priya.public())
-        self.vaults["nick"].add_member("sam", "Sam", self.sam.public())
+            self.vaults["noor"].set(name, value)
+        self.vaults["noor"].add_member("priya", "Priya", self.priya.public())
+        self.vaults["noor"].add_member("sam", "Sam", self.sam.public())
 
     def vault_json(self) -> dict:
         return json.loads((self.project_dir / ".playground" / "vault.json").read_text())
@@ -361,12 +361,12 @@ class VaultTests(PlatformTestCase):
         status = self.vaults["sam"].status()
         self.assertTrue(status["available"] and status["member"])
         self.assertFalse(status["admin"])
-        self.assertEqual(status["members"], ["nick", "priya", "sam"])
+        self.assertEqual(status["members"], ["noor", "priya", "sam"])
 
     def test_each_secret_is_wrapped_once_per_member_with_fresh_keys(self):
         data = self.vault_json()
         for entry in data["secrets"].values():
-            self.assertEqual(set(entry["wraps"]), {self.nick.id, self.priya.id, self.sam.id})
+            self.assertEqual(set(entry["wraps"]), {self.noor.id, self.priya.id, self.sam.id})
             epks = {w["epk"] for w in entry["wraps"].values()}
             self.assertEqual(len(epks), 3)
         nonces = [e["nonce"] for e in data["secrets"].values()]
@@ -375,11 +375,11 @@ class VaultTests(PlatformTestCase):
     def test_any_member_can_write_and_others_read_it(self):
         self.vaults["priya"].set("NEW_TOKEN", "tok-priya-998877")
         self.assertEqual(self.vaults["sam"].get("NEW_TOKEN"), "tok-priya-998877")
-        self.assertEqual(self.vaults["nick"].get("NEW_TOKEN"), "tok-priya-998877")
+        self.assertEqual(self.vaults["noor"].get("NEW_TOKEN"), "tok-priya-998877")
 
     def test_removal_rewraps_and_locks_the_member_out(self):
         before = self.vault_json()
-        result = self.vaults["nick"].remove_member("sam")
+        result = self.vaults["noor"].remove_member("sam")
         self.assertEqual(result["to_change"], sorted(self.SECRETS))
         after = self.vault_json()
         for name in self.SECRETS:
@@ -401,18 +401,18 @@ class VaultTests(PlatformTestCase):
         before = self.vault_json()["secrets"]["STRIPE_KEY"]
         self.vaults["priya"].rotate("STRIPE_KEY", "sk_test_rotated_00112233")
         self.assertEqual(self.vaults["sam"].get("STRIPE_KEY"), "sk_test_rotated_00112233")
-        self.assertEqual(self.vaults["nick"].rewrap(), sorted(self.SECRETS))
+        self.assertEqual(self.vaults["noor"].rewrap(), sorted(self.SECRETS))
         after = self.vault_json()["secrets"]["STRIPE_KEY"]
         self.assertNotEqual(before["ciphertext"], after["ciphertext"])
-        self.assertEqual(self.vaults["nick"].get("STRIPE_KEY"), "sk_test_rotated_00112233")
-        self.assertTrue(self.vaults["nick"].delete("SMTP_PASSWORD"))
+        self.assertEqual(self.vaults["noor"].get("STRIPE_KEY"), "sk_test_rotated_00112233")
+        self.assertTrue(self.vaults["noor"].delete("SMTP_PASSWORD"))
         self.assertNotIn("SMTP_PASSWORD", self.vaults["sam"].names())
 
     def test_only_an_admin_can_change_the_roster(self):
         outsider = security.VaultIdentity.generate("outsider")
         with self.assertRaises(VaultAccessDenied):
             self.vaults["priya"].add_member("mallory", "Mallory", outsider.public())
-        self.vaults["nick"].add_member("priya", "Priya", self.priya.public(), admin=True)
+        self.vaults["noor"].add_member("priya", "Priya", self.priya.public(), admin=True)
         self.vaults["priya"].add_member("mallory", "Mallory", outsider.public())
         mallory = Vault(self.project_dir, PROJECT_ID, identity=outsider, trust_dir=self.tmp / "trust-m")
         self.assertEqual(mallory.get("STRIPE_KEY"), self.SECRETS["STRIPE_KEY"])
@@ -424,7 +424,7 @@ class VaultTests(PlatformTestCase):
                                                               **{k: attacker.public()[k] for k in ("x25519", "ed25519")}}
         (self.project_dir / ".playground" / "vault.json").write_text(json.dumps(data))
         with self.assertRaises(VaultTampered):
-            self.vaults["nick"].set("ANOTHER", "would-leak-to-attacker")
+            self.vaults["noor"].set("ANOTHER", "would-leak-to-attacker")
         self.assertNotIn(attacker.id, json.dumps(self.vault_json()["secrets"]))
 
     def test_a_roster_entry_signed_by_a_non_admin_is_refused(self):
@@ -447,7 +447,7 @@ class VaultTests(PlatformTestCase):
     def test_rollback_and_rewritten_history_are_refused(self):
         path = self.project_dir / ".playground" / "vault.json"
         old = path.read_text()
-        self.vaults["nick"].remove_member("sam")
+        self.vaults["noor"].remove_member("sam")
         self.vaults["priya"].names()           # priya has now seen the newer roster
         path.write_text(old)                   # someone restores the file from before sam was removed
         with self.assertRaisesRegex(VaultTampered, "rolled it back|older"):
@@ -472,8 +472,8 @@ class VaultTests(PlatformTestCase):
 
     def test_no_plaintext_anywhere_on_disk(self):
         self.vaults["priya"].set("LATE_ADDITION", "plaintext-canary-7f3a9c")
-        self.vaults["nick"].remove_member("sam")
-        self.vaults["nick"].rotate()
+        self.vaults["noor"].remove_member("sam")
+        self.vaults["noor"].rotate()
         values = list(self.SECRETS.values()) + ["plaintext-canary-7f3a9c"]
         files = self.all_files(self.project_dir, self.data, self.tmp)
         self.assertTrue(files)
@@ -500,7 +500,7 @@ class VaultTests(PlatformTestCase):
         self.assertEqual(security.VaultIdentity.load_or_create().id, ident.id)
 
     def test_save_refuses_to_write_plaintext(self):
-        vault = self.vaults["nick"]
+        vault = self.vaults["noor"]
         data = self.vault_json()
         data["secrets"]["LEAK"] = {"oops": "hunter2-hunter2"}
         with self.assertRaises(SecurityError):
@@ -513,7 +513,7 @@ class MembershipTests(PlatformTestCase):
     def test_grant_and_revoke_cover_servers_and_vault(self):
         ProjectCA.create(PROJECT_ID)
         owner = security.VaultIdentity.load_or_create()
-        Vault(self.project_dir, PROJECT_ID, identity=owner).create("nick", "Nick")
+        Vault(self.project_dir, PROJECT_ID, identity=owner).create("noor", "Noor")
         Vault(self.project_dir, PROJECT_ID, identity=owner).set("API_KEY", "sk-membership-445566")
         key = security.device_key()
         priya = security.VaultIdentity.generate("priya")

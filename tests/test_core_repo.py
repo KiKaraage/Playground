@@ -47,7 +47,7 @@ class RepoTests(unittest.TestCase):
                          {("app.js", "untracked"), ("docs/read me.md", "untracked")})
         self.assertEqual(next(c for c in state.changes if c.path == "app.js").added, 2)
         self.assertEqual(repo.suggest_message(state.changes), "Add app.js and read me.md")
-        short = repo.commit(self.root, "Start the waitlist", fallback=("Nick", "nick@playground.local"))
+        short = repo.commit(self.root, "Start the waitlist", fallback=("Noor", "noor@playground.local"))
         self.assertTrue(short)
         (self.root / "app.js").write_text("one\nthree\n")
         (self.root / "docs" / "read me.md").unlink()
@@ -58,7 +58,7 @@ class RepoTests(unittest.TestCase):
         self.assertEqual(changes["docs/read me.md"].state, "deleted")
         self.assertEqual(repo.suggest_message(state.changes), "Update app.js and read me.md")
         self.assertEqual((state.count, state.commits[0].subject, state.commits[0].author),
-                         (1, "Start the waitlist", "Nick"))
+                         (1, "Start the waitlist", "Noor"))
         with self.assertRaises(repo.RepoError):
             repo.commit(self.root, "   ")
 
@@ -125,17 +125,17 @@ class RepoTests(unittest.TestCase):
         self.assertIn(state.commits[0].hash, state.unpushed)
 
     def test_page_addresses_become_clone_addresses(self):
-        self.assertEqual(repo.normal_address("https://github.com/nick/rally"), "https://github.com/nick/rally.git")
-        self.assertEqual(repo.normal_address("git@github.com:nick/rally.git"), "git@github.com:nick/rally.git")
-        self.assertEqual(repo.RepoState(tracked=True, remote_url="git@github.com:nick/rally.git").web_url,
-                         "https://github.com/nick/rally")
+        self.assertEqual(repo.normal_address("https://github.com/noor/rally"), "https://github.com/noor/rally.git")
+        self.assertEqual(repo.normal_address("git@github.com:noor/rally.git"), "git@github.com:noor/rally.git")
+        self.assertEqual(repo.RepoState(tracked=True, remote_url="git@github.com:noor/rally.git").web_url,
+                         "https://github.com/noor/rally")
         self.assertEqual(repo.RepoState(tracked=True, remote_url="ssh://git@10.0.0.4/srv/r.git").web_url, "")
 
     def test_where_names_the_remote(self):
-        state = repo.RepoState(tracked=True, remote_url="git@github.com:nick/rally.git")
-        self.assertEqual(state.where, "github.com/nick/rally")
-        state.remote_url = "https://github.com/nick/rally.git"
-        self.assertEqual(state.where, "github.com/nick/rally")
+        state = repo.RepoState(tracked=True, remote_url="git@github.com:noor/rally.git")
+        self.assertEqual(state.where, "github.com/noor/rally")
+        state.remote_url = "https://github.com/noor/rally.git"
+        self.assertEqual(state.where, "github.com/noor/rally")
 
     def test_branch_names_are_checked(self):
         repo.start(self.root)

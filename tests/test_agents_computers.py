@@ -18,7 +18,7 @@ from luma_playground.agents.connections import Connection
 class AddressTests(unittest.TestCase):
     def test_addresses_in_peoples_words(self):
         self.assertEqual(computers.parse_address("root@10.0.0.4"), ("root", "10.0.0.4", 22))
-        self.assertEqual(computers.parse_address("nick@build.example:6767"), ("nick", "build.example", 6767))
+        self.assertEqual(computers.parse_address("noor@build.example:6767"), ("noor", "build.example", 6767))
         self.assertEqual(computers.parse_address("buildbox"), ("", "buildbox", 22))
         with self.assertRaises(computers.ComputerError):
             computers.parse_address("root@bad host; rm -rf /")
@@ -74,14 +74,14 @@ class FinderTests(unittest.TestCase):
              "method": "ChatGPT", "user": "luma-dev", "user_home": "/srv/dev/home"},
             {"provider": "claude", "home": "/srv/dev/home/.claude", "label": "Claude", "signed_in": True,
              "method": "subscription", "user": "luma-dev", "user_home": "/srv/dev/home"}]}
-        offered = computers.suggest_connections(computer, found, "nick")
+        offered = computers.suggest_connections(computer, found, "noor")
         self.assertEqual([c.label for c in offered], ["Codex · luma-dev", "Claude · luma-dev"])
         codex = offered[0]
         self.assertEqual((codex.where, codex.config_home, codex.kind, codex.private_seat),
                          ("build", "/srv/dev/home/.codex", "personal-plan", True))
         self.assertEqual(codex.extra, {"remote_user": "luma-dev", "remote_home": "/srv/dev/home"})
         codex.validate()
-        again = computers.suggest_connections(computer, found, "nick", existing=offered)
+        again = computers.suggest_connections(computer, found, "noor", existing=offered)
         self.assertEqual(again, [])
 
 

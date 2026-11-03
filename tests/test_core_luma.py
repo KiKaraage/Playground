@@ -9,7 +9,7 @@ from luma_playground.core import luma, project
 from luma_playground.core.model import Member
 from luma_playground.core.store import ProjectStore
 
-NICK = Member(id="nick", name="Nick", role="owner")
+NOOR = Member(id="noor", name="Noor", role="owner")
 
 
 class LumaGuideTests(unittest.TestCase):
@@ -19,7 +19,7 @@ class LumaGuideTests(unittest.TestCase):
         luma._SEEN.clear()
 
     def made(self, name, summary):
-        return project.create_project(name, summary, root=self.tmp.name, owner=NICK, git=False).path
+        return project.create_project(name, summary, root=self.tmp.name, owner=NOOR, git=False).path
 
     def now(self, root):
         luma._SEEN.clear()

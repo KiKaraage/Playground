@@ -10,7 +10,7 @@ import unittest
 from luma_playground.core import events, project, store, watch
 from luma_playground.core.model import Member, Option, PendingDecision, ThreadEntry
 
-NICK = Member(id="nick", name="Nick", role="owner")
+NOOR = Member(id="noor", name="Noor", role="owner")
 
 
 class WatcherTests(unittest.TestCase):
@@ -18,7 +18,7 @@ class WatcherTests(unittest.TestCase):
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        made = project.create_project("Kiln", root=self.tmp.name, owner=NICK, git=False, bus=events.EventBus())
+        made = project.create_project("Kiln", root=self.tmp.name, owner=NOOR, git=False, bus=events.EventBus())
         self.root = made.path
         self.bus = events.EventBus()
         self.seen: list[tuple[str, dict]] = []
@@ -76,14 +76,14 @@ class WatcherTests(unittest.TestCase):
         pending = PendingDecision(id="how-0001", question="How?", options=[Option("a", "A"), Option("b", "B")])
         self.agent_write(".playground/pending/how-0001.json", json.dumps(pending.to_dict()))
         self.agent_write(".playground/pending/shot-0001.json", json.dumps({"id": "shot-0001", "kind": "screenshot"}))
-        self.agent_write(".playground/answers/how-0001.json", json.dumps({"option": "a", "answered_by": "nick"}))
+        self.agent_write(".playground/answers/how-0001.json", json.dumps({"option": "a", "answered_by": "noor"}))
         self.agent_write(".playground/knowledge/tip.md", "---\ntitle: Tip\n---\nUse +1.")
         self.agent_write(".playground/brief.md", "---\ntitle: Kiln\n---\n")
-        self.agent_write(".playground/decisions.md", "# Decisions\n\n### A\n- who: Nick\n")
+        self.agent_write(".playground/decisions.md", "# Decisions\n\n### A\n- who: Noor\n")
         topics = {t: p for t, p in self.poll()}
         self.assertEqual(topics["decision.pending"]["decision"]["question"], "How?")
         self.assertEqual(topics["request.pending"]["request"]["kind"], "screenshot")
-        self.assertEqual(topics["decision.answered"]["answer"]["answered_by"], "nick")
+        self.assertEqual(topics["decision.answered"]["answer"]["answered_by"], "noor")
         whats = sorted(p["what"] for t, p in self.seen if t == "project.changed")
         self.assertEqual(whats, ["brief", "decisions", "knowledge"])
 

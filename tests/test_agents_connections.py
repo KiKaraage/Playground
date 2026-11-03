@@ -19,7 +19,7 @@ from luma_playground.agents.connections import (
 
 
 def plan(**kw) -> Connection:
-    data = dict(id="claude", label="Claude", kind="personal-plan", provider="claude", owner="nick")
+    data = dict(id="claude", label="Claude", kind="personal-plan", provider="claude", owner="noor")
     data.update(kw)
     return Connection(**data)
 
@@ -63,17 +63,17 @@ class RuleTests(unittest.TestCase):
 
     def test_who_may_run(self):
         mine = plan()
-        check_may_run(mine, "nick")
-        check_may_run(mine, "nick", goal_owner="nick")
+        check_may_run(mine, "noor")
+        check_may_run(mine, "noor", goal_owner="noor")
         with self.assertRaises(ConnectionRuleError) as caught:
             check_may_run(mine, "priya")
-        self.assertIn("nick's own plan", str(caught.exception))
+        self.assertIn("noor's own plan", str(caught.exception))
         with self.assertRaises(ConnectionRuleError):
-            check_may_run(mine, "nick", goal_owner="priya")  # even with work_on_team_tasks
-        shared = Connection(id="k", label="Key", kind="api-key", provider="claude", owner="nick",
+            check_may_run(mine, "noor", goal_owner="priya")  # even with work_on_team_tasks
+        shared = Connection(id="k", label="Key", kind="api-key", provider="claude", owner="noor",
                             sharing="team", spend_cap="$10")
         check_may_run(shared, "priya", goal_owner="priya")
-        private_key = Connection(id="k2", label="Key", kind="api-key", provider="claude", owner="nick")
+        private_key = Connection(id="k2", label="Key", kind="api-key", provider="claude", owner="noor")
         with self.assertRaises(ConnectionRuleError):
             check_may_run(private_key, "priya")
 
@@ -102,10 +102,10 @@ class StoreTests(unittest.TestCase):
         second = self.store.add(plan(id="claude-luma", label="Claude, Luma"))
         self.assertEqual(first.config_home, "")
         self.assertEqual(second.config_home, str(self.base / "data" / "accounts" / "claude-luma"))
-        codex = self.store.add(Connection(id="codex", label="Codex", kind="personal-plan", provider="codex", owner="nick"))
+        codex = self.store.add(Connection(id="codex", label="Codex", kind="personal-plan", provider="codex", owner="noor"))
         self.assertEqual(codex.config_home, "")
         key = self.store.add(Connection(id="claude-key", label="Claude key", kind="api-key", provider="claude",
-                                        owner="nick", key_ref="claude-key"))
+                                        owner="noor", key_ref="claude-key"))
         self.assertTrue(key.config_home.endswith("accounts/claude-key"))
         self.assertEqual([c.id for c in self.store.list()], ["claude-personal", "claude-luma", "codex", "claude-key"])
 
@@ -286,7 +286,7 @@ class DetectTests(unittest.TestCase):
         self.assertEqual(found["codex"].method, "ChatGPT")
         self.assertFalse(found["gemini"].installed)
         self.assertNotIn("node", found)          # Node.js is Playground's business, never the person's
-        offered = suggest(list(found.values()), "nick")
+        offered = suggest(list(found.values()), "noor")
         self.assertEqual([(c.provider, c.kind) for c in offered], [("claude", "personal-plan"), ("codex", "personal-plan")])
 
     def test_detect_signed_out_and_masked_key_is_not_kept(self):
@@ -308,7 +308,7 @@ class DetectTests(unittest.TestCase):
         item = found["codex"]
         self.assertEqual((item.program, item.via, item.signed_in, item.method),
                          (str(codex), "the ChatGPT app", True, "ChatGPT"))
-        offered = suggest([item], "nick")
+        offered = suggest([item], "noor")
         self.assertEqual([(c.provider, c.kind) for c in offered], [("codex", "personal-plan")])
 
     def test_nothing_installed_is_still_offered_for_setup(self):

@@ -57,13 +57,13 @@ class RepoState:
 
     @property
     def web_url(self) -> str:
-        """The repository's page (https://github.com/nick/rally), when the remote is on a known host."""
+        """The repository's page (https://github.com/noor/rally), when the remote is on a known host."""
         where = self.where
         return f"https://{where}" if self.remote_url and where.split("/", 1)[0] in WEB_HOSTS else ""
 
     @property
     def where(self) -> str:
-        """github.com/nick/rally, or "Only on this computer"."""
+        """github.com/noor/rally, or "Only on this computer"."""
         url = self.remote_url
         if not url:
             return "Only on this computer"

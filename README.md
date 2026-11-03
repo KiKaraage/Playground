@@ -36,6 +36,30 @@ systemctl reboot
 This layers the RPM onto the system image. It requires Luma's platform package
 (`luma-developer-platform`), which Luma already includes.
 
+## Install on Fedora, Debian or Ubuntu
+
+These builds carry their own copy of LumaUI, Luma's toolkit, under `/usr/lib/playground`, so Playground
+looks and works as it does on Luma. Your package manager installs GTK, libadwaita and WebKitGTK from your
+distribution. They need GTK 4.18 and libadwaita 1.7 or newer.
+
+Fedora 44:
+
+```sh
+curl -LO https://github.com/SimplyLuma/Playground/releases/latest/download/playground.x86_64.rpm
+sudo dnf install ./playground.x86_64.rpm
+```
+
+Debian 13 or Ubuntu 26.04 LTS and newer:
+
+```sh
+curl -LO https://github.com/SimplyLuma/Playground/releases/latest/download/playground.amd64.deb
+sudo apt install ./playground.amd64.deb
+```
+
+Previews of desktop apps also need GTK's Broadway server: `gtk4-devel-tools` on Fedora, `libgtk-4-bin`
+on Debian and Ubuntu (both are suggested by the packages). Ubuntu 24.04 LTS ships older GTK and libadwaita
+and isn't supported.
+
 ## First start
 
 With no agent connected, Playground offers:
@@ -63,7 +87,7 @@ With no agent connected, Playground offers:
 
 ## Requirements
 
-- Luma (Fedora 44 based), or Fedora 44 with `luma-developer-platform`
+- Luma; or Fedora 44, Debian 13, Ubuntu 26.04 LTS with the packages above
 - Python 3.11 or newer, PyGObject, GTK 4.18+, libadwaita 1.7+, WebKitGTK 6.0, GtkSourceView 5, VTE for GTK 4
 - `gtk4-broadwayd` for previews of desktop apps
 - podman for project boxes; git, openssh, bubblewrap
@@ -84,7 +108,8 @@ Tests: `python3 -m unittest discover -s tests`. Tests that need a display skip w
 - [ARCHITECTURE.md](ARCHITECTURE.md): modules, file formats and contracts
 - [SECURITY.md](SECURITY.md): agent fencing, secrets, certificates and the vault
 - [SHARING.md](SHARING.md): how teammates' copies of a project stay in sync
-- [packaging/luma-playground.spec](packaging/luma-playground.spec): the RPM
+- [packaging/luma-playground.spec](packaging/luma-playground.spec): the RPM for Luma
+- [packaging/linux/](packaging/linux/): the Fedora RPM and the Debian/Ubuntu package, with their own LumaUI
 
 ## License
 

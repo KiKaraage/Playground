@@ -1869,7 +1869,7 @@ def _dry_run(project_dir: Path, store: ProjectStore, project, place: dict, recip
 # ───────────────────────────── going back ─────────────────────────────
 
 def _find_point(project_dir: Path | str, number: int | str) -> dict:
-    """A restore point by id (``"nick/14-ab12cd"``, or ``"14"``) or by number. Two teammates can save the same
+    """A restore point by id (``"noor/14-ab12cd"``, or ``"14"``) or by number. Two teammates can save the same
     number at the same moment; by number, the one this computer has the code for (then the newest) is meant."""
     points = restore_points(project_dir)
     text = str(number)

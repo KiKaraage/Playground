@@ -91,7 +91,7 @@ class Computer:
 
 
 def parse_address(text: str) -> tuple[str, str, int]:
-    """'nick@build.example:6767' / 'root@10.0.0.4' / 'buildbox' → (user, host, port)."""
+    """'noor@build.example:6767' / 'root@10.0.0.4' / 'buildbox' → (user, host, port)."""
     text = text.strip()
     user, _, rest = text.rpartition("@")
     host, port = rest, 22

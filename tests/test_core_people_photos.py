@@ -21,7 +21,7 @@ class PhotoTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         base = Path(os.path.realpath(self.tmp.name))
         bus = events.EventBus()
-        project = create_project("Kiln", root=base, git=False, bus=bus, owner=Member(id="nick", name="Nick", role="owner"))
+        project = create_project("Kiln", root=base, git=False, bus=bus, owner=Member(id="noor", name="Noor", role="owner"))
         self.root = project.path
         self.store = ProjectStore(self.root, bus=bus)
         made = self.store.read_project()
