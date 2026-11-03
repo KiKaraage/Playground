@@ -4,6 +4,8 @@ An agentic development environment for Luma. Describe what you want to make; Pla
 project folder, connects an agent of your choice, and shows the running app in a live preview at phone,
 tablet and desktop sizes while the agent works.
 
+![Playground: a water tracker previewed at phone size beside its conversation with Ari](docs/playground.webp)
+
 ## Install on Luma
 
 Playground runs as an ordinary program of your user account, not in a sandbox: it starts agents, a
