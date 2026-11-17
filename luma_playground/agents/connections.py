@@ -56,13 +56,13 @@ TEAM_TASK_CAP_MIN = 1
 TEAM_TASK_CAP_MAX = 50
 
 # Environment variables that name the account folder for each program.
-HOME_VARS = {"claude": "CLAUDE_CONFIG_DIR", "codex": "CODEX_HOME"}
+HOME_VARS = {"claude": "CLAUDE_CONFIG_DIR", "codex": "CODEX_HOME", "opencode": "OPENCODE_DATA_DIR"}
 # Environment variables an API-key connection fills from the keyring.
 KEY_VARS = {
     "claude": ("ANTHROPIC_API_KEY",),
     "codex": ("CODEX_API_KEY", "OPENAI_API_KEY"),
     "gemini": ("GEMINI_API_KEY",),
-    "opencode": (),
+    "opencode": ("OPENCODE_API_KEY",),
     "goose": (),
 }
 # Keys that must not leak into a personal-plan launch, or the program bills
