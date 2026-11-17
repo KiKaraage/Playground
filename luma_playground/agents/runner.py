@@ -490,7 +490,35 @@ def default_agent_factory(connection: Connection, root: str, handlers: acp.Proje
     """An AcpClient for ACP connections, an AriAgent for Ari and local models.
 
     The ACP agent's whole program runs fenced in (``sandbox.confine_agent``)
-    when the connection says so, or by default when the project is shared."""
+    when the connection says so, or by default when the project is shared. Pi
+    is an in-process adapter over Pi's own RPC protocol, but its program is
+    launched and fenced the same way."""
+    if connection.provider == "pi":
+        from .pi import PiAgent
+        argv, env = launch_spec(connection, registry)
+        env["PLAYGROUND_ACTOR"] = connection.id
+        env["PLAYGROUND_GOAL"] = goal_id
+        servers = mcp_servers_for(root, goal_id, connection.id)
+        confinement = None
+        if sandbox.agent_sandbox_wanted(connection.sandbox, shared_project=sandbox.project_is_shared(root)):
+            readable = [os.path.dirname(s["command"]) for s in servers
+                        if os.path.isabs(s["command"])]
+            try:
+                confinement = sandbox.confine_agent(
+                    argv, env, project_root=root, provider=connection.provider,
+                    config_home=connection.config_home, extra_readable=readable)
+            except sandbox.SandboxUnavailable as error:
+                why = ("this connection is set to always run fenced in" if connection.sandbox == "on"
+                       else "this project is shared with other people")
+                raise LaunchError(f"{error} {connection.label} won't start without it, because {why}. "
+                                  "To run it anyway, turn off \"Keep it inside the project\" for this connection."
+                                  ) from error
+        agent = PiAgent(root, handlers, argv=confinement.argv if confinement else argv,
+                        env=confinement.env if confinement else env, goal_id=goal_id,
+                        actor=connection.id, mcp_servers=servers, log_path=log_path,
+                        on_close=confinement.cleanup if confinement else None)
+        agent.confinement = confinement
+        return agent
     if connection.is_acp:
         from . import computers
         computer = computers.for_connection(connection)
