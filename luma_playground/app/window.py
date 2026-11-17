@@ -238,7 +238,7 @@ class ProjectData:
         owner = str(getattr(goal, "owner", "") or "")
         if owner and owner != you and self.member(owner) is not None:
             return False
-        key = str(goal.connection or "ari")
+        key = str(goal.connection or default_connection_id())
         for member in self.members:
             member_id = str(member.get("id") or "")
             if member_id and member_id != you and key.startswith(member_id + "-"):
@@ -247,7 +247,7 @@ class ProjectData:
 
     def agent_words(self, connection_id: str) -> str:
         """'Priya’s agent' for a teammate's own plan, else the connection's name."""
-        key = str(connection_id or "ari")
+        key = str(connection_id or default_connection_id())
         for member in self.members:
             member_id = str(member.get("id") or "")
             if member_id and key.startswith(member_id + "-") and member_id != self.you():
@@ -427,7 +427,7 @@ class ProjectData:
     def create_goal(self, title: str, owner: str) -> str | None:
         self.forget()
         try:
-            return self.store.create_goal(title, owner=owner, connection="ari").id
+            return self.store.create_goal(title, owner=owner, connection=default_connection_id()).id
         except (StoreError, OSError, ValueError):
             log.exception("could not create the goal")
             return None
@@ -550,6 +550,32 @@ def load_connections() -> list[dict]:
     if not any(c.get("kind") == "ari" or c.get("id") == "ari" for c in found):
         found.insert(0, dict(ARI))
     return found
+
+
+def _local_agent(connection) -> bool:
+    """A connection that's an agent program here: not Ari or a bare local model, and not on another computer."""
+    provider = str(getattr(connection, "provider", "") or "").lower()
+    where = str(getattr(connection, "where", "this-computer") or "this-computer")
+    return (getattr(connection, "kind", "") != "ari" and provider not in ("ari", "ollama", "")
+            and where in ("this-computer", "local"))
+
+
+def default_connection_id() -> str:
+    """Where a new conversation starts: a real Ari connection first, else the first agent
+    set up on this computer, else the Ari placeholder until someone connects one."""
+    module = _optional("agents.connections")
+    if module is None:
+        return "ari"
+    try:
+        found = list(module.ConnectionStore().list())
+    except Exception:  # noqa: BLE001 - no connections file means Ari, as before
+        return "ari"
+    ari = next((c for c in found if getattr(c, "kind", "") == "ari"
+                or getattr(c, "id", "") == "ari"), None)
+    if ari is not None:
+        return str(ari.id) if str(ari.id) != "ari" else "ari"
+    agent = next((c for c in found if _local_agent(c)), None)
+    return str(agent.id) if agent is not None else "ari"
 
 
 def connection_subtitle(connection: dict) -> str:
@@ -2094,10 +2120,12 @@ class PlaygroundWindow(AppWindow):
     def connection(self, key: str | None) -> dict:
         """A connection by id: one on this computer, or a teammate's described from the project."""
         key = str(key or "")
+        if not key:
+            return self.connection(default_connection_id())   # a goal with no chosen agent
         for connection in self.connections:
-            if key and key in (connection.get("id"), connection.get("label")):
+            if key in (connection.get("id"), connection.get("label")):
                 return connection
-        if not key or key == "ari":
+        if key == "ari":
             return dict(ARI)
         provider = key.split("-")[-1] if "-" in key else key
         owner = key[: -len(provider) - 1] if "-" in key else ""
@@ -2111,9 +2139,9 @@ class PlaygroundWindow(AppWindow):
 
     def _agent_for(self, goal_id: str | None) -> dict:
         if self.project is None or not goal_id:
-            return self.connection("ari")
+            return self.connection(default_connection_id())
         goal = self.project.goal(goal_id) or {}
-        return self.connection(goal.get("connection") or "ari")
+        return self.connection(goal.get("connection") or "")
 
     def _where_words(self, where: str | None) -> str:
         if not where or where in ("this-computer", "local"):
