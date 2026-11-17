@@ -730,6 +730,9 @@ def detect(*, env: dict[str, str] | None = None, check_ollama: bool = True, time
             version = _run([exe, *args], min(timeout, 10), run_env)
             if version and version.returncode == 0:
                 item.version = (version.stdout.strip().splitlines() or [""])[0][:40]
+            if accounts.SIGN_IN_FILE.get(provider):   # programs that keep a sign-in file of their own
+                account = accounts.Account(provider, "", accounts.NAMES.get(provider, name), id=provider)
+                item = _account_item(provider, account, exe, item.version, "", run_env, timeout)
         found.append(item)
 
     _readiness(found, registry, path)
