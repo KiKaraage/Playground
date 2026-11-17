@@ -1814,8 +1814,9 @@ class PlaygroundWindow(AppWindow):
                                     self._card_context(goal, agent), empty=empty)
         self.composer.set_agent(agent, connection_subtitle(agent))
         self._composer_agent = (agent.get("id"), agent.get("label"))
-        known = self._runner(goal_id, create=False)
-        self.composer.set_options(known.options() if known is not None else [], can_choose=self._agent_runs_here())
+        can_choose = self._agent_runs_here()
+        known = self._runner(goal_id, create=can_choose)
+        self.composer.set_options(known.options() if known is not None else [], can_choose=can_choose)
         self.composer.set_plan_link(plan_usage_url(agent))
         self._banner(goal, agent)
         state = self.agent_states.get(goal_id, "")
@@ -2328,6 +2329,7 @@ class PlaygroundWindow(AppWindow):
             log.exception("could not start the runner")
             return None
         self.runners[key] = runner
+        runner.warm_options()
         return runner
 
     def runner_for(self, goal_id: str, create: bool = True):
