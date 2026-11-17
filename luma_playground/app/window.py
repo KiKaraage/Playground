@@ -70,7 +70,7 @@ HEARTBEAT_S = 10
 STATUS_ORDER = {"needs-you": 0, "working": 1, "waiting": 1, "ready": 2, "live": 3, "done": 4, "paused": 5}
 ARI = {"id": "ari", "label": "Ari", "provider": "ari", "kind": "ari", "where": "this-computer"}
 PROVIDER_NAMES = {"claude": "Claude", "codex": "Codex", "gemini": "Gemini", "opencode": "OpenCode",
-                  "goose": "goose", "ollama": "Local model", "ari": "Ari"}
+                  "goose": "goose", "pi": "Pi", "ollama": "Local model", "ari": "Ari"}
 BUSY_STATES = ("starting", "working", "thinking", "running")
 RAIL_WIDTH = 224
 
