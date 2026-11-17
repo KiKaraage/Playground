@@ -2922,7 +2922,7 @@ class PlaygroundWindow(AppWindow):
             app.add_action(action)
         note = Gio.Notification.new(words)
         note.set_body(body)
-        note.set_default_action_and_target_value("app.open-conversation", GLib.Variant.new_string(goal_id))
+        notification_action(note, "app.open-conversation", GLib.Variant.new_string(goal_id))
         if state in ("waiting", "needs-sign-in"):
             note.set_priority(Gio.NotificationPriority.HIGH)
         app.send_notification(f"conversation-{goal_id}", note)
@@ -3039,6 +3039,14 @@ class PlaygroundWindow(AppWindow):
         if preview is not None:
             preview.stop_all()     # (the application's do_shutdown does it again, in case of another window)
         return False
+
+
+def notification_action(note, action: str, target) -> None:
+    """Set a notification's click action across PyGObject versions: some expose the
+    C name ``set_default_action_and_target_value``, others only the introspected
+    ``set_default_action_and_target`` (which takes the same GVariant target)."""
+    setter = getattr(note, "set_default_action_and_target_value", None) or note.set_default_action_and_target
+    setter(action, target)
 
 
 def _quietly(work, *args) -> None:
