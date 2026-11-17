@@ -16,7 +16,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from gi.repository import GLib, Gtk
+from gi.repository import GLib, GObject, Gtk
 
 from . import common as c
 from .common import Row, Tag, callout, text
@@ -807,11 +807,39 @@ class AreaPages:
         drop = c.button("Drop", style="plain", small=True, on_click=lambda: self.keep_note(note, False))
         later = text("Agents won’t follow it until someone keeps it", "pgs-row-sub", wrap=False)
         later.set_visible(not self.sheet.phone)
+
+        body = " ".join(note.body.split())
+        more = None
+        if len(body) > 300:
+            # The collapsed view keeps roughly the old length, but ends on a word and an ellipsis.
+            short = body[:299].rsplit(" ", 1)[0] + "…"
+            body_label = text(short, "pgs-row-sub")
+            more = c.button("Show more", style="plain", small=True)
+            expanded = [False]
+
+            def set_label(label: str) -> None:
+                widget_label = getattr(more, "label_widget", None)
+                if widget_label is not None:
+                    widget_label.set_label(label)
+                else:
+                    more.set_label(label)
+                more.update_property([Gtk.AccessibleProperty.LABEL], [label])
+
+            def flip(_button) -> None:
+                expanded[0] = not expanded[0]
+                body_label.set_label(body if expanded[0] else short)
+                more.update_state([Gtk.AccessibleState.EXPANDED], [GObject.Value(GObject.TYPE_INT, int(expanded[0]))])
+                set_label("Show less" if expanded[0] else "Show more")
+
+            more.connect("clicked", flip)
+        else:
+            body_label = text(body, "pgs-row-sub") if body else Gtk.Box()
+
         card = c.vbox(c.hbox(c.glyph("sparkles", 16), text(f"{who} suggests a rule", "pgs-sub-title", wrap=False,
                                                             hexpand=True, ellipsize=True), later, spacing=8),
                       text(note.title, "pgs-suggest-title"),
-                      text(" ".join(note.body.split())[:300], "pgs-row-sub") if note.body.strip() else Gtk.Box(),
-                      c.hbox(keep, drop, spacing=8), spacing=8, css="pgs-suggest-card")
+                      body_label,
+                      c.hbox(keep, drop, more, spacing=8), spacing=8, css="pgs-suggest-card")
         card.set_margin_bottom(14)
         return card
 
