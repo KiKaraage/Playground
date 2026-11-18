@@ -2329,7 +2329,6 @@ class PlaygroundWindow(AppWindow):
             log.exception("could not start the runner")
             return None
         self.runners[key] = runner
-        runner.warm_options()
         return runner
 
     def runner_for(self, goal_id: str, create: bool = True):
@@ -2772,6 +2771,7 @@ class PlaygroundWindow(AppWindow):
         if runner is None:
             self._toast("Choose who works on this first")
             return
+        runner.warm_options()
         options = runner.options()
         if not options:
             self._options_waiting = True
