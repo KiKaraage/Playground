@@ -2044,6 +2044,7 @@ class PlaygroundWindow(AppWindow):
             if goal["id"] == self.goal_id:
                 self.goal_id = None
                 self.project._goals_cache = None
+            self.composer.focus()
             self._sync_now()
             remaining = [g for g in self.project.goals() if not (g.get("extra") or {}).get("archived")]
             if self.goal_id is None and remaining:
