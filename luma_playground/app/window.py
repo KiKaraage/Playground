@@ -2526,13 +2526,18 @@ class PlaygroundWindow(AppWindow):
             return
         handoff = _optional("agents.handoff")
         target = self.connection(getattr(connection, "id", None) or _as_dict(connection).get("id"))
+        work = any(entry.get("role") == "agent" and (
+            entry.get("kind") in ("step", "plan", "decision", "proof") or
+            (entry.get("kind") == "message" and str(entry.get("text") or "").strip()))
+            for entry in self.project.thread(goal_id))
         try:
             before = (self.project.goal(goal_id) or {}).get("connection") or "ari"
-            card = handoff.build_brief(self.project.store, goal_id, from_connection=before,
-                                       to_connection=connection).card_data() if handoff else {}
             self.project.store.update_goal(goal_id, lambda g: setattr(g, "connection", target.get("id") or ""))
-            self.project.append(goal_id, ThreadEntry(kind="handoff", role="system", data=card,
-                                                     text=f"Switched to {target.get('label')}"))
+            if work:
+                card = handoff.build_brief(self.project.store, goal_id, from_connection=before,
+                                           to_connection=connection).card_data() if handoff else {}
+                self.project.append(goal_id, ThreadEntry(kind="handoff", role="system", data=card,
+                                                         text=f"Switched to {target.get('label')}"))
         except Exception as error:  # noqa: BLE001
             self._toast(str(error))
 
@@ -2751,8 +2756,18 @@ class PlaygroundWindow(AppWindow):
             self._tokens.append(self.bus.subscribe(topic, later(handler)))
 
     # ── the agent's settings: model, effort, mode ─────────────────────────
+    def _current_runner_is(self, goal_id: str, key: str) -> bool:
+        """Ignore events a runner published just before the conversation switched agents."""
+        if not key or self.project is None:
+            return True
+        runner = self.runners.get((str(self.project.path), goal_id))
+        current = str(getattr(getattr(runner, "connection", None), "id", "") or "") if runner is not None else ""
+        return not current or current == key
+
     def _on_options(self, **payload) -> None:
         if not self._mine(payload) or payload.get("goal_id") != self.goal_id:
+            return
+        if not self._current_runner_is(str(payload.get("goal_id") or ""), str(payload.get("connection") or "")):
             return
         self.composer.set_options(payload.get("options") or [], can_choose=self._agent_runs_here())
         if getattr(self, "_options_waiting", False):
@@ -2945,14 +2960,16 @@ class PlaygroundWindow(AppWindow):
         if not self._mine(payload):
             return
         goal_id, state = str(payload.get("goal_id") or ""), str(payload.get("state") or "")
-        if not state:
+        if not state or not self._current_runner_is(goal_id, str(payload.get("connection") or "")):
             return
         before = self.agent_states.get(goal_id, "")
         self.agent_states[goal_id] = state
-        self._notify(goal_id, state, before)
+        key = str(payload.get("connection") or "")
+        self._notify(goal_id, state, before, key)
         if goal_id != self.goal_id:
             return
-        name = self._agent_for(goal_id).get("label") or "Ari"
+        agent = self.connection(key) if key else self._agent_for(goal_id)
+        name = agent.get("label") or "Ari"
         busy = state in BUSY_STATES
         self.conversation.set_thinking(name if busy and not self._step_running(
             str(payload.get("connection") or "")) else None,
@@ -2965,13 +2982,14 @@ class PlaygroundWindow(AppWindow):
         elif state == "needs-sign-in":
             self.composer.set_placeholder(f"{name} needs you to sign in. The card above has the way on.")
 
-    def _notify(self, goal_id: str, state: str, before: str) -> None:
+    def _notify(self, goal_id: str, state: str, before: str, connection: str = "") -> None:
         """A desktop notification when an agent needs the person, or finishes, and they aren't looking at that
         conversation. Clicking it opens the conversation."""
         looking = self.is_active() and goal_id == self.goal_id and self.split.get_show_sidebar()
         if looking or self.project is None:
             return
-        name = self._agent_for(goal_id).get("label") or "Ari"
+        agent = self.connection(connection) if connection else self._agent_for(goal_id)
+        name = agent.get("label") or "Ari"
         goal = self.project.goal(goal_id) or {}
         title = str(goal.get("display_title") or goal.get("title") or "A conversation")
         if state == "waiting":

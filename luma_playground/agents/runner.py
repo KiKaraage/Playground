@@ -776,6 +776,21 @@ class GoalRunner:
         return (self.connection.account_key() == connection.account_key()
                 and self.connection.is_acp == connection.is_acp)
 
+    def _has_work_to_hand_off(self) -> bool:
+        """Nothing to hand over on a conversation where no agent has done anything yet."""
+        try:
+            entries = self.store.read_thread(self.goal_id)
+        except Exception:  # noqa: BLE001
+            return False
+        for entry in entries:
+            if entry.role != "agent":
+                continue
+            if entry.kind in ("step", "plan", "decision", "proof"):
+                return True
+            if entry.kind == "message" and str(entry.text or "").strip():
+                return True
+        return False
+
     def _switch(self, connection: Connection) -> Handoff | None:
         old = self.connection
         same = self.is_same_account(connection)
@@ -784,13 +799,20 @@ class GoalRunner:
             if same:
                 self._save_session()
                 return None
+            try:
+                self.store.close_stale_steps(self.goal_id, {old.id})
+            except (StoreError, OSError, ValueError):
+                log.exception("closing steps the previous agent left running")
             self._shutdown_agent()
             self._session_cost = None
             self._needs_context = True
-            self._handoff = build_brief(self.store, self.goal_id, from_connection=old, to_connection=connection)
-            entry = self.store.append_thread(self.goal_id, ThreadEntry(kind="handoff", role="system", by=self.person,
-                                                                        data=self._handoff.card_data()))
-            self._handoff_entry_id = entry.id
+            self._options = self._seed_options()
+            if self._has_work_to_hand_off():
+                self._handoff = build_brief(self.store, self.goal_id, from_connection=old, to_connection=connection)
+                entry = self.store.append_thread(self.goal_id, ThreadEntry(kind="handoff", role="system",
+                                                                           by=self.person,
+                                                                           data=self._handoff.card_data()))
+                self._handoff_entry_id = entry.id
             self._save_session()
         try:
             self.store.update_goal(self.goal_id, lambda g: setattr(g, "connection", connection.id))
@@ -798,7 +820,13 @@ class GoalRunner:
             pass
         self.store.log(f"Switched to {connection.label}", kind="agent", actor=self.person, goal=self.goal_id,
                        data={"from": old.id, "to": connection.id})
-        self._state("handoff", brief=self._handoff.brief)
+        if self._handoff is not None:
+            self._state("handoff", brief=self._handoff.brief)
+        else:
+            self._state("idle")
+        self._publish_options()
+        if not self.options():
+            self.warm_options()
         return self._handoff
 
     def stop(self, grace: float = 8.0) -> None:
