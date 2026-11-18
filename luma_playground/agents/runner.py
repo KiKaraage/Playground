@@ -893,43 +893,53 @@ class GoalRunner:
         cached model list means this can be useful before the agent has started."""
         return list(getattr(self, "_options", []) or [])
 
+    def _connection_model(self) -> str:
+        return str(getattr(self.connection, "model", "") or "")
+
     def _seed_options(self) -> list[dict]:
-        """Settings known without starting the agent: last session's, then OpenCode's cache."""
-        saved = (self._load_session() or {}).get("options") or []
-        options = [dict(o) for o in saved if isinstance(o, dict) and o.get("id")]
-        if not options and getattr(self.connection, "provider", "") == "opencode":
+        """Settings known without starting the agent: last session's, then the model cache."""
+        remembered = (self._load_session() or {}).get("options") or []
+        options = [dict(o) for o in remembered if isinstance(o, dict) and o.get("id")]
+        if not options:
             try:
-                from . import opencode
-                option = opencode.model_option(self.connection, cached_only=True,
-                                               current=self._saved_options().get(opencode.OPTION_ID))
+                from . import models
+                rows = models.available(self.connection, offline=True)
             except Exception:  # noqa: BLE001 - the cache is a convenience, never a blocker
-                option = None
-            if option:
-                options = [option]
+                rows = []
+            if rows:
+                options = [{"id": "model", "name": "Model", "category": "model", "type": "select",
+                            "currentValue": self._saved_options().get("model"), "options": rows}]
+        saved = self._saved_options()
+        default = self._connection_model()
+        model_ids = {str(o.get("id")) for o in options if o.get("category") == "model"}
+        if default and not any(str(key) in model_ids for key in saved):
+            for option in options:
+                if option.get("category") != "model":
+                    continue
+                if any(row.get("value") == default for row in option.get("options") or []):
+                    option["currentValue"] = default
+                break
         return options
 
     def warm_options(self) -> None:
-        """Fetch OpenCode's model list in the background when nothing is cached, so a
-        model can be chosen before the first message. The ACP list wins once it arrives."""
-        if getattr(self.connection, "provider", "") != "opencode" or not self.connection.is_acp:
-            return
-        if self.options():
+        """Fetch a model list from the agent's program when the person opens the menu."""
+        if not getattr(self.connection, "is_acp", False) or self.options():
             return
 
-        def work() -> dict | None:
+        def work() -> list[dict]:
             try:
-                from . import opencode
-                return opencode.model_option(self.connection,
-                                             current=self._saved_options().get(opencode.OPTION_ID))
+                from . import models
+                return models.available(self.connection)
             except Exception:  # noqa: BLE001
-                return None
+                return []
 
-        def done(option: dict | None) -> None:
-            if option is not None and not self._closed and not self.options():
-                self._options = [option]
+        def done(rows: list[dict]) -> None:
+            if rows and not self._closed and not self.options():
+                self._options = [{"id": "model", "name": "Model", "category": "model", "type": "select",
+                                  "currentValue": self._saved_options().get("model"), "options": rows}]
                 self._publish_options()
 
-        threading.Thread(target=lambda: done(work()), name=f"opencode-models-{self.goal_id}", daemon=True).start()
+        threading.Thread(target=lambda: done(work()), name=f"models-{self.goal_id}", daemon=True).start()
 
     def prepare(self) -> None:
         """Start the agent (if it isn't) so its settings can be shown. Off the caller's thread."""
@@ -982,8 +992,9 @@ class GoalRunner:
                 agent.sessions.setdefault(self._session_id, {})["configOptions"] = \
                     [o for o in remembered if not str(o.get("id", "")).startswith("__")]
                 self._options = agent.config_options(self._session_id) or list(remembered)
+        saved = self._saved_options()
         current = {o.get("id"): o.get("currentValue") for o in self._options}
-        for config_id, value in self._saved_options().items():
+        for config_id, value in saved.items():
             offered = next((o for o in self._options if o.get("id") == config_id), None)
             if offered is None or current.get(config_id) == value:
                 continue
@@ -993,6 +1004,17 @@ class GoalRunner:
                 self._options = agent.set_config_option(self._session_id, config_id, value)
             except Exception as error:  # noqa: BLE001
                 log.info("couldn't put back %s: %s", config_id, error)
+        model_ids = {str(o.get("id")) for o in self._options if o.get("category") == "model"}
+        default = self._connection_model()
+        if default and not any(str(key) in model_ids for key in saved):
+            offered = next((o for o in self._options if o.get("category") == "model"), None)
+            current = {o.get("id"): o.get("currentValue") for o in self._options}
+            if offered is not None and current.get(offered.get("id")) != default and \
+                    any(c.get("value") == default for c in offered.get("options") or []):
+                try:
+                    self._options = agent.set_config_option(self._session_id, str(offered.get("id")), default)
+                except Exception as error:  # noqa: BLE001
+                    log.info("couldn't use the connection's model: %s", error)
         self._save_session()
         self._publish_options()
 
