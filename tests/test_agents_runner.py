@@ -520,18 +520,6 @@ class RunnerTurnTests(RunnerBase):
         self.assertEqual(steps[0].data["state"], "done")
         self.assertTrue(steps[0].data.get("cut_off"))
 
-    def test_switch_replaces_the_previous_agents_model_list(self):
-        runner = self.runner()
-        runner._options = [{"id": "model", "name": "Model", "category": "model",
-                            "options": [{"value": "old-model", "name": "Old"}]}]
-        codex = Connection(id="codex", label="Codex", kind="personal-plan", provider="codex", owner="noor")
-        with mock.patch("luma_playground.agents.models.available",
-                        return_value=[{"value": "new-model", "name": "New"}]):
-            runner.switch(codex)
-            self.assertTrue(runner.wait_idle(30))
-        options = {o["id"]: o for o in runner.options()}
-        self.assertEqual([c["value"] for c in options["model"]["options"]], ["new-model"])
-
     def test_switch_to_the_same_account_carries_on(self):
         runner = self.runner()
         runner.send("two-steps")

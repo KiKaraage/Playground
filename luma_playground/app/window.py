@@ -67,7 +67,7 @@ log = logging.getLogger(__name__)
 WIDE = 1160      # all three parts (a 1180 window, less its frame)
 PHONE = 640      # the conversation is the page
 HEARTBEAT_S = 10
-STATUS_ORDER = {"needs-you": 0, "working": 1, "waiting": 1, "ready": 2, "live": 3, "done": 4, "paused": 5}
+STATUS_ORDER = {"needs-you": 0, "working": 1, "waiting": 1, "draft": 1, "ready": 2, "live": 3, "done": 4, "paused": 5}
 ARI = {"id": "ari", "label": "Ari", "provider": "ari", "kind": "ari", "where": "this-computer"}
 PROVIDER_NAMES = {"claude": "Claude", "codex": "Codex", "gemini": "Gemini", "opencode": "OpenCode",
                   "goose": "goose", "pi": "Pi", "ollama": "Local model", "ari": "Ari"}
@@ -241,6 +241,8 @@ class ProjectData:
             if data["pending"] and data["status"] == "working":
                 data["status"] = "needs-you"
                 data.pop("status_label", None)
+            elif data["status"] == "working" and not goal.is_chat and self._not_started(goal):
+                data["status"] = "draft"
             elif data["status"] == "working" and not goal.is_chat and self.nobody_to_work(goal, here):
                 # Said honestly: no agent on this computer can pick it up yet ("Working · Ari" would be a fib).
                 data["status"] = "waiting"
@@ -253,6 +255,16 @@ class ProjectData:
 
     def goal(self, goal_id: str) -> dict | None:
         return next((g for g in self.goals() if g["id"] == goal_id), None)
+
+    def _not_started(self, goal) -> bool:
+        """A conversation nobody has spoken in yet isn't 'working' on the rail."""
+        try:
+            entries = self.thread(goal.id)
+        except Exception:  # noqa: BLE001
+            return False
+        return not any(entry.get("role") == "person" or (
+            entry.get("role") == "agent" and entry.get("kind") in ("step", "message", "plan", "proof"))
+            for entry in entries)
 
     def nobody_to_work(self, goal, here: set[str] | None) -> bool:
         """A goal of yours whose agent isn't connected on this computer. A teammate's goal runs on

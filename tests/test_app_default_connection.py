@@ -96,7 +96,13 @@ class DefaultConnectionTests(unittest.TestCase):
         self.assertIsInstance(child, Gtk.Box)
         self.assertTrue(any(isinstance(widget, Gtk.DropDown) for widget in (
             child.get_first_child().get_next_sibling(),)))
-
+    def test_a_conversation_without_any_turn_is_not_started_yet(self):
+        window = gtk_module("luma_playground.app.window")
+        project = window.ProjectData.__new__(window.ProjectData)
+        project.thread = lambda _goal_id: []
+        self.assertTrue(project._not_started(mock.Mock(id="g1")))
+        project.thread = lambda _goal_id: [{"role": "person", "kind": "message", "text": "Hi"}]
+        self.assertFalse(project._not_started(mock.Mock(id="g1")))
     def test_a_new_conversation_can_name_its_agent(self):
         window = gtk_module("luma_playground.app.window")
         project = window.ProjectData.__new__(window.ProjectData)
