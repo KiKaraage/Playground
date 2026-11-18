@@ -61,6 +61,29 @@ class DefaultConnectionTests(unittest.TestCase):
         self.assertEqual(self._default(window, [self._conn("qwen", "ollama", kind="local")]), "ari")
         self.assertEqual(self._default(window, [self._conn("claude-2", "claude", where="other-computer")]), "ari")
 
+    def test_a_passed_snapshot_is_used_without_reading_the_file(self):
+        window = gtk_module("luma_playground.app.window")
+        found = [{"id": "opencode", "label": "OpenCode", "provider": "opencode", "kind": "personal-plan",
+                  "where": "this-computer", "_object": self._conn("opencode", "opencode")}]
+        with mock.patch.object(window, "_optional", side_effect=AssertionError("read the connections file")):
+            self.assertEqual(window.default_connection_id(found), "opencode")
+
+    def test_the_ari_stand_in_does_not_beat_a_real_agent(self):
+        window = gtk_module("luma_playground.app.window")
+        found = [dict(window.ARI),
+                 {"id": "opencode", "provider": "opencode", "kind": "personal-plan", "where": "this-computer"}]
+        self.assertEqual(window.default_connection_id(found), "opencode")
+
+    def test_project_rows_use_the_cached_snapshot(self):
+        window = gtk_module("luma_playground.app.window")
+        project = window.ProjectData.__new__(window.ProjectData)
+        project.model = mock.Mock(members=[])
+        project._you = "me"
+        project.set_connections([{"id": "opencode", "label": "OpenCode", "provider": "opencode",
+                                  "kind": "personal-plan", "where": "this-computer"}])
+        self.assertEqual(project.default_id, "opencode")
+        self.assertEqual(project.agent_words(""), "OpenCode")
+
 
 if __name__ == "__main__":
     unittest.main()
