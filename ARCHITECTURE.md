@@ -37,6 +37,8 @@ src/luma-playground/
       connections.py         Connection profiles (kind, owner, sharing, where), per-account config homes
       ari.py                 Ari: Luma's own agent loop over an OpenAI-compatible Chat Completions endpoint
       pi.py                  Pi, driven in-process over Pi's own --mode rpc JSONL protocol (no ACP shim)
+      models.py              early model lists: finds an available_models hook on the connection's agent module
+      model_cache.py         shared per-account cache for those lists (12-hour TTL)
       runner.py              GoalRunner: drives one goal's conversation with a chosen connection; emits Card events
       handoff.py             builds the Handoff brief when switching agent/account
     mcp/
@@ -193,6 +195,18 @@ Pi is launched as a subprocess in `--mode rpc`, speaking one JSON object per lin
 - `stop()`
 
 It translates ACP `session/update` (`agent_message_chunk`, `tool_call`, `tool_call_update`, `plan`) into cards: agent text becomes `message`, tool calls are grouped into `step` cards, and the agent's `plan` becomes a `plan` card. It also folds in `playground.*` MCP effects (decisions, proofs) via `store` and `watch`.
+
+## Adding an agent harness
+
+There are two shapes. An ACP agent needs no adapter: add its provider to `registry.PROVIDER_TO_REGISTRY` and `BUILTIN`, and `AcpClient` handles the session. If the harness does not speak ACP, add a module under `agents/` that exposes the duck-typed surface `GoalRunner` uses (session open/reopen/close, `prompt`, `cancel`, `config_options`, `set_config_option`, auth methods where applicable) and emits the same ACP `session/update` dicts as `pi.py`. Give `default_agent_factory` in `runner.py` a branch that builds it, apply `sandbox.confine_agent`, and add the provider to `connections.detect` for sign-in detection and to the app's provider names, glyphs and hues.
+
+The model chooser is opt-in and needs no central registry. If the harness can list models before a session starts, add a module-level hook to its agent module:
+
+`available_models(connection, *, offline=False, refresh=False) -> list[dict]`
+
+Return ACP-shaped rows `{value, name, description}`. `models.available()` finds the hook by the connection's provider (or registry agent id), so any registered agent can opt in without editing `models.py`. `offline=True` must never start a program, because the Usage sheet calls it on the UI thread; use `agents/model_cache.py` for the per-account, 12-hour TTL cache. An agent with no hook still gets its model list from ACP `configOptions` once the session is running, which `GoalRunner._settle_options()` applies.
+
+Test a custom adapter with a scripted fake RPC or ACP server, as in `tests/fake_pi_rpc.py`. No network calls in tests.
 
 ## mcp/server.py
 
