@@ -74,6 +74,39 @@ class DefaultConnectionTests(unittest.TestCase):
                  {"id": "opencode", "provider": "opencode", "kind": "personal-plan", "where": "this-computer"}]
         self.assertEqual(window.default_connection_id(found), "opencode")
 
+    def test_new_conversation_only_offers_the_picker_with_several_connections(self):
+        window = gtk_module("luma_playground.app.window")
+        import gi
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gtk
+        stub = mock.MagicMock()
+        stub.project.thread.return_value = [{"role": "person"}]
+        stub.default_connection_id.return_value = "opencode"
+        real = {"id": "opencode", "label": "OpenCode", "_object": mock.Mock()}
+        dialog = mock.MagicMock()
+        with mock.patch.object(window.Adw, "AlertDialog", return_value=dialog):
+            stub.connections = [dict(window.ARI), real]
+            window.PlaygroundWindow.new_goal(stub)
+            self.assertIsInstance(dialog.set_extra_child.call_args.args[0], Gtk.Entry)
+            dialog.reset_mock()
+            stub.connections = [dict(window.ARI), real,
+                                {"id": "pi", "label": "Pi", "_object": mock.Mock()}]
+            window.PlaygroundWindow.new_goal(stub)
+        child = dialog.set_extra_child.call_args.args[0]
+        self.assertIsInstance(child, Gtk.Box)
+        self.assertTrue(any(isinstance(widget, Gtk.DropDown) for widget in (
+            child.get_first_child().get_next_sibling(),)))
+
+    def test_a_new_conversation_can_name_its_agent(self):
+        window = gtk_module("luma_playground.app.window")
+        project = window.ProjectData.__new__(window.ProjectData)
+        project.store = mock.Mock()
+        project.store.create_goal.return_value = mock.Mock(id="g1")
+        project.default_id = "ari"
+        project.forget = mock.Mock()
+        project.create_goal("Two agents", "me", "pi")
+        project.store.create_goal.assert_called_once_with("Two agents", owner="me", connection="pi")
+
     def test_project_rows_use_the_cached_snapshot(self):
         window = gtk_module("luma_playground.app.window")
         project = window.ProjectData.__new__(window.ProjectData)

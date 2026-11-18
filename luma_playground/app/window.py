@@ -444,10 +444,11 @@ class ProjectData:
             log.exception("could not record the answer")
             return False
 
-    def create_goal(self, title: str, owner: str) -> str | None:
+    def create_goal(self, title: str, owner: str, connection: str | None = None) -> str | None:
         self.forget()
         try:
-            return self.store.create_goal(title, owner=owner, connection=self.default_id).id
+            chosen = self.default_id if connection is None else connection
+            return self.store.create_goal(title, owner=owner, connection=chosen).id
         except (StoreError, OSError, ValueError):
             log.exception("could not create the goal")
             return None
@@ -2080,7 +2081,21 @@ class PlaygroundWindow(AppWindow):
                                  "you talk to here works in the same project and sees the others’ work.")
         entry = Gtk.Entry(placeholder_text="Like “Let people pay when they book”", activates_default=True)
         entry.update_property([Gtk.AccessibleProperty.LABEL], ["What it’s about"])
-        dialog.set_extra_child(entry)
+        choices = [c for c in self.connections if not _ari_placeholder(c)]
+        ids = [str(c.get("id") or "") for c in choices]
+        picker = None
+        if len(choices) > 1:
+            names = [str(c.get("label") or c.get("id") or "Ari") for c in choices]
+            picker = Gtk.DropDown.new(Gtk.StringList.new(names), None)
+            default = self.default_connection_id()
+            picker.set_selected(ids.index(default) if default in ids else 0)
+            picker.update_property([Gtk.AccessibleProperty.LABEL], ["Who works on this"])
+            fields = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            fields.append(entry)
+            fields.append(picker)
+            dialog.set_extra_child(fields)
+        else:
+            dialog.set_extra_child(entry)
         dialog.add_response("cancel", "Cancel")
         dialog.add_response("create", "Start")
         dialog.set_response_appearance("create", Adw.ResponseAppearance.SUGGESTED)
@@ -2091,7 +2106,9 @@ class PlaygroundWindow(AppWindow):
             title = entry.get_text().strip()
             if response != "create" or not title or self.project is None:
                 return
-            goal_id = self.project.create_goal(title, self.project.you())
+            index = picker.get_selected() if picker is not None else 0
+            connection = ids[index] if 0 <= index < len(ids) else self.default_connection_id()
+            goal_id = self.project.create_goal(title, self.project.you(), connection)
             if goal_id:
                 self._sync_now()
                 self.select_goal(goal_id)
