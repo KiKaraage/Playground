@@ -429,6 +429,9 @@ def _model_value(model: dict) -> str:
     return f"{provider}/{mid}" if provider and mid else (mid or provider)
 
 
+model_value = _model_value
+
+
 # ── The agent ───────────────────────────────────────────────────────────────
 
 class PiAgent:
