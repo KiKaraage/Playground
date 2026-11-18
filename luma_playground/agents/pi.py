@@ -432,6 +432,36 @@ def _model_value(model: dict) -> str:
 model_value = _model_value
 
 
+def available_models(connection, *, offline: bool = False, refresh: bool = False) -> list[dict]:
+    """This module's hook for the general model chooser in ``agents.models``.
+
+    Pi answers ``get_available_models`` over its own RPC before a session
+    starts, so its list can be cached per account like any other hook's.
+    """
+    from . import connections, model_cache
+
+    moment = time.time()
+    rows = [] if refresh else model_cache.cached(connection, now=moment)
+    if rows:
+        return rows
+    if offline:
+        return model_cache.stale(connection)
+    try:
+        argv, env = connections.launch_spec(connection, install=False)
+        found = connections._pi_rpc_models(argv, env, timeout=8)
+    except Exception:  # noqa: BLE001 - models are a convenience, never a blocker
+        found = None
+    if not found:
+        return model_cache.stale(connection)
+    rows = [{"value": _model_value(model),
+             "name": str(model.get("name") or model.get("id") or ""),
+             "description": str(model.get("provider") or "")}
+            for model in found if isinstance(model, dict) and (model.get("id") or model.get("provider"))]
+    if rows:
+        model_cache.remember(connection, rows, now=moment)
+    return rows
+
+
 # ── The agent ───────────────────────────────────────────────────────────────
 
 class PiAgent:

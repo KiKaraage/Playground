@@ -54,6 +54,15 @@ class AvailableModelsTests(unittest.TestCase):
         for provider in ("claude", "codex", "goose"):
             self.assertEqual(models.available(self._conn(provider)), [])
 
+    def test_any_agent_module_can_offer_a_list(self):
+        from luma_playground.agents import ari, models
+
+        def offer(connection, *, offline=False, refresh=False):
+            return [{"value": "a", "name": "A", "description": ""}]
+
+        with mock.patch.object(ari, "available_models", offer, create=True):
+            self.assertEqual(models.available(self._conn("ari")), [{"value": "a", "name": "A", "description": ""}])
+
 
 if __name__ == "__main__":
     unittest.main()

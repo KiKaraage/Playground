@@ -96,6 +96,12 @@ def model_option(connection, *, current: Any = None, env: dict[str, str] | None 
             "options": [{"value": value, "name": value} for value in values]}
 
 
+def available_models(connection, *, offline: bool = False, refresh: bool = False) -> list[dict]:
+    """This module's hook for the general model chooser in ``agents.models``."""
+    option = model_option(connection, refresh=refresh, cached_only=offline)
+    return [dict(row) for row in (option or {}).get("options") or [] if isinstance(row, dict)]
+
+
 def _stale_values(connection) -> list[str]:
     data = read_json(_cache_path()) or {}
     entry = data.get(_account(connection)) if isinstance(data, dict) else None
