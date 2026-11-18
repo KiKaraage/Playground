@@ -77,6 +77,15 @@ class OptionsMenuTests(unittest.TestCase):
         self.assertIs(made, runner)
         runner.warm_options.assert_not_called()
 
+    def test_a_running_step_by_another_agent_does_not_hide_thinking(self):
+        window = gtk_module("luma_playground.app.window")
+        stub = mock.MagicMock()
+        stub.project = mock.Mock()
+        stub.goal_id = "g1"
+        stub.project.thread.return_value = [{"kind": "step", "by": "opencode", "data": {"state": "running"}}]
+        self.assertFalse(window.PlaygroundWindow._step_running(stub, "pi"))
+        self.assertTrue(window.PlaygroundWindow._step_running(stub, "opencode"))
+
     def test_opening_the_options_menu_warms_the_model_list(self):
         window = gtk_module("luma_playground.app.window")
         stub = mock.MagicMock()

@@ -1858,12 +1858,13 @@ class PlaygroundWindow(AppWindow):
             return
         self.composer.set_banner(None)
 
-    def _step_running(self) -> bool:
+    def _step_running(self, connection: str = "") -> bool:
         if self.project is None or self.goal_id is None:
             return False
         entries = self.project.thread(self.goal_id)
-        return bool(entries) and entries[-1].get("kind") == "step" and \
-            (entries[-1].get("data") or {}).get("state") == "running"
+        last = entries[-1] if entries else {}
+        return last.get("kind") == "step" and (last.get("data") or {}).get("state") == "running" and \
+            (not connection or last.get("by") == connection)
 
     def _started_words(self, goal: dict) -> str:
         moment = w.parse_ts(goal.get("created"))
@@ -2953,7 +2954,8 @@ class PlaygroundWindow(AppWindow):
             return
         name = self._agent_for(goal_id).get("label") or "Ari"
         busy = state in BUSY_STATES
-        self.conversation.set_thinking(name if busy and not self._step_running() else None,
+        self.conversation.set_thinking(name if busy and not self._step_running(
+            str(payload.get("connection") or "")) else None,
                                        "starting" if state == "starting" else "working")
         self.composer.set_busy(busy)
         # Sign-in, errors and going offline each come with their own card in the thread (written by the
@@ -3021,8 +3023,9 @@ class PlaygroundWindow(AppWindow):
             self.rail.set_counts(self._area_counts())
         if self.goal_id is not None:
             self.conversation.sync(project.thread(self.goal_id))
-            if self.agent_states.get(self.goal_id, "") in BUSY_STATES and not self._step_running():
-                self.conversation.set_thinking(self._agent_for(self.goal_id).get("label") or "Ari")
+            agent = self._agent_for(self.goal_id)
+            if self.agent_states.get(self.goal_id, "") in BUSY_STATES and not self._step_running(str(agent.get("id") or "")):
+                self.conversation.set_thinking(agent.get("label") or "Ari")
             goal = next((g for g in goals if g["id"] == self.goal_id), None)
             if goal is not None and not goal.get("is_chat"):
                 self._refresh_heading(goal)

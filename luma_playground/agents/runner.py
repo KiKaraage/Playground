@@ -789,7 +789,7 @@ class GoalRunner:
             self._needs_context = True
             self._handoff = build_brief(self.store, self.goal_id, from_connection=old, to_connection=connection)
             entry = self.store.append_thread(self.goal_id, ThreadEntry(kind="handoff", role="system", by=self.person,
-                                                                       data=self._handoff.card_data()))
+                                                                        data=self._handoff.card_data()))
             self._handoff_entry_id = entry.id
             self._save_session()
         try:
@@ -1463,9 +1463,21 @@ class GoalRunner:
         self._state("stopped")
 
     def _close_stale_steps(self) -> None:
-        """A step a cut-off turn left "running" is closed before a new one starts."""
+        """A step a cut-off turn left "running" is closed before a new one starts, including
+        one left by the agent this conversation switched away from. A teammate's step, whose
+        id starts with their member id, is theirs to close on their computer."""
+        ids = {self.connection.id}
         try:
-            self.store.close_stale_steps(self.goal_id, {self.connection.id})
+            members = self.store.read_project().members
+            others = {str(m.id) for m in members if str(m.id) and str(m.id) != self.person}
+            for entry in self.store.read_thread(self.goal_id):
+                if entry.kind == "step" and entry.by and not any(
+                        entry.by.startswith(other + "-") for other in others):
+                    ids.add(entry.by)
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            self.store.close_stale_steps(self.goal_id, ids)
         except (StoreError, OSError, ValueError):
             log.exception("closing steps a cut-off turn left open")
 
