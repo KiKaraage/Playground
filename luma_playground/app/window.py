@@ -446,6 +446,19 @@ def _is_speed(option: dict) -> bool:
     return any(w in words for w in ("fast", "speed", "tier"))
 
 
+def _action_part(value) -> str:
+    """Make an agent-supplied id safe for a GAction name.
+
+    The toolkit turns a command's id into a menu action (`menu.opt-…`). An id with
+    a `:` (OpenCode model ids like `ollama-cloud/deepseek-v4-pro:0813`) makes an
+    invalid *detailed* action name and crashes GTK when the menu is built. Only
+    keep letters, digits, dash and dot; the caller adds an index so two choices
+    that sanitise alike still get distinct actions.
+    """
+    text = re.sub(r"[^A-Za-z0-9.\-]", "_", str(value if value is not None else ""))
+    return text or "_"
+
+
 def _option_rank(option: dict) -> tuple:
     """Model, effort and speed first (what people change); then the rest as the agent listed them."""
     category = option.get("category") or ""
@@ -2704,24 +2717,28 @@ class PlaygroundWindow(AppWindow):
             choices = [c for c in option.get("options") or [] if isinstance(c, dict)]
             if not choices:
                 continue
-            name = str(option.get("name") or option.get("id"))
+            option_id = option.get("id")
+            base = f"opt.{_action_part(option_id)}"
+            name = str(option.get("name") or option_id)
             current = option.get("currentValue")
             words = next((str(c.get("name") or c.get("value")) for c in choices if c.get("value") == current), "")
             switch = _as_switch(choices)
             if switch is not None:
                 off, on = switch
-                command = Command(f"opt.{option.get('id')}", name,
-                                  lambda o=option.get("id"), now=current, a=off, b=on:
+                command = Command(base, name,
+                                  lambda o=option_id, now=current, a=off, b=on:
                                   self._set_option(o, a if now == b else b),
                                   checked=lambda now=current, b=on: now == b)
             else:
-                command = Command(f"opt.{option.get('id')}", f"{name} · {words}" if words else name, lambda: None,
+                # The id is only an action name: the real value rides in the lambda. An index keeps
+                # ids unique even when two models differ only by a character we sanitise away.
+                command = Command(base, f"{name} · {words}" if words else name, lambda: None,
                                   children=tuple(
-                                      Command(f"opt.{option.get('id')}.{c.get('value')}", str(c.get("name") or c.get("value")),
-                                              lambda o=option.get("id"), v=c.get("value"): self._set_option(o, v),
+                                      Command(f"{base}.{index}", str(c.get("name") or c.get("value")),
+                                              lambda o=option_id, v=c.get("value"): self._set_option(o, v),
                                               description=str(c.get("description") or "")[:80],
                                               checked=lambda now=current, v=c.get("value"): now == v)
-                                      for c in choices))
+                                      for index, c in enumerate(choices)))
             (main if option.get("category") in ("model", "thought_level") or _is_speed(option) else rest).append(command)
         groups = [CommandGroup(None, tuple(main))] if main else []
         if rest:
@@ -2905,7 +2922,7 @@ class PlaygroundWindow(AppWindow):
             app.add_action(action)
         note = Gio.Notification.new(words)
         note.set_body(body)
-        note.set_default_action_and_target_value("app.open-conversation", GLib.Variant.new_string(goal_id))
+        notification_action(note, "app.open-conversation", GLib.Variant.new_string(goal_id))
         if state in ("waiting", "needs-sign-in"):
             note.set_priority(Gio.NotificationPriority.HIGH)
         app.send_notification(f"conversation-{goal_id}", note)
@@ -3022,6 +3039,14 @@ class PlaygroundWindow(AppWindow):
         if preview is not None:
             preview.stop_all()     # (the application's do_shutdown does it again, in case of another window)
         return False
+
+
+def notification_action(note, action: str, target) -> None:
+    """Set a notification's click action across PyGObject versions: some expose the
+    C name ``set_default_action_and_target_value``, others only the introspected
+    ``set_default_action_and_target`` (which takes the same GVariant target)."""
+    setter = getattr(note, "set_default_action_and_target_value", None) or note.set_default_action_and_target
+    setter(action, target)
 
 
 def _quietly(work, *args) -> None:
