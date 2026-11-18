@@ -94,8 +94,31 @@ class DefaultConnectionTests(unittest.TestCase):
             window.PlaygroundWindow.new_goal(stub)
         child = dialog.set_extra_child.call_args.args[0]
         self.assertIsInstance(child, Gtk.Box)
-        self.assertTrue(any(isinstance(widget, Gtk.DropDown) for widget in (
-            child.get_first_child().get_next_sibling(),)))
+        picker = child.get_first_child().get_next_sibling()
+        self.assertIsInstance(picker, Gtk.DropDown)
+        model = picker.get_model()
+        self.assertEqual([model.get_string(i) for i in range(model.get_n_items())],
+                         ["OpenCode", "Pi", "Add Connection..."])
+        child.get_first_child().set_text("A draft title")
+        picker.set_selected(2)
+        stub.remember.assert_any_call("new_conversation_title", "A draft title")
+        dialog.close.assert_called_once_with()
+        stub.open_sheet.assert_called_once_with("picker", page="add")
+        self.assertEqual(picker.get_selected(), 0)
+    def test_new_conversation_restores_and_clears_the_title_draft(self):
+        window = gtk_module("luma_playground.app.window")
+        stub = mock.MagicMock()
+        stub.project.thread.return_value = [{"role": "person"}]
+        stub.recall.side_effect = lambda key, default=None: "Saved title" if key == "new_conversation_title" else default
+        dialog = mock.MagicMock()
+        with mock.patch.object(window.Adw, "AlertDialog", return_value=dialog):
+            window.PlaygroundWindow.new_goal(stub)
+        entry = dialog.set_extra_child.call_args.args[0]
+        self.assertEqual(entry.get_text(), "Saved title")
+        respond = dialog.connect.call_args.args[1]
+        respond(dialog, "cancel")
+        stub.remember.assert_called_once_with("new_conversation_title", "")
+
     def test_a_conversation_without_any_turn_is_not_started_yet(self):
         window = gtk_module("luma_playground.app.window")
         project = window.ProjectData.__new__(window.ProjectData)

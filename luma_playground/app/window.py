@@ -117,6 +117,7 @@ def _ari_placeholder(connection) -> bool:
     return isinstance(connection, dict) and connection.get("id") == "ari" and connection.get("_object") is None
 
 
+
 # ── one project, through the store ───────────────────────────────────────────
 
 class ProjectData:
@@ -2092,16 +2093,40 @@ class PlaygroundWindow(AppWindow):
         dialog = Adw.AlertDialog(heading="New conversation", body="What it’s about, in a few words. Every agent "
                                  "you talk to here works in the same project and sees the others’ work.")
         entry = Gtk.Entry(placeholder_text="Like “Let people pay when they book”", activates_default=True)
+        entry.set_text(str(self.recall("new_conversation_title", "") or ""))
         entry.update_property([Gtk.AccessibleProperty.LABEL], ["What it’s about"])
+        keep_draft = [False]
         choices = [c for c in self.connections if not _ari_placeholder(c)]
         ids = [str(c.get("id") or "") for c in choices]
         picker = None
         if len(choices) > 1:
             names = [str(c.get("label") or c.get("id") or "Ari") for c in choices]
+            add_at = len(names)
+            names.append("Add Connection...")
             picker = Gtk.DropDown.new(Gtk.StringList.new(names), None)
             default = self.default_connection_id()
-            picker.set_selected(ids.index(default) if default in ids else 0)
+            selected = ids.index(default) if default in ids else 0
+            last = [selected]
+            picker.set_selected(selected)
             picker.update_property([Gtk.AccessibleProperty.LABEL], ["Who works on this"])
+            busy = [False]
+
+            def chosen(control, _param) -> None:
+                if busy[0]:
+                    return
+                index = control.get_selected()
+                if index == add_at:
+                    busy[0] = True
+                    control.set_selected(last[0])
+                    busy[0] = False
+                    self.remember("new_conversation_title", entry.get_text().strip())
+                    keep_draft[0] = True
+                    dialog.close()
+                    self.open_sheet("picker", page="add")
+                else:
+                    last[0] = index
+
+            picker.connect("notify::selected", chosen)
             fields = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
             fields.append(entry)
             fields.append(picker)
@@ -2116,7 +2141,12 @@ class PlaygroundWindow(AppWindow):
 
         def respond(_dialog, response: str) -> None:
             title = entry.get_text().strip()
-            if response != "create" or not title or self.project is None:
+            if response != "create":
+                if not keep_draft[0]:
+                    self.remember("new_conversation_title", "")
+                return
+            self.remember("new_conversation_title", "")
+            if not title or self.project is None:
                 return
             index = picker.get_selected() if picker is not None else 0
             connection = ids[index] if 0 <= index < len(ids) else self.default_connection_id()
